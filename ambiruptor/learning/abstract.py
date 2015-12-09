@@ -1,11 +1,9 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-class Abstract :
+class Learning :
     """Abstract class for learning"""
         
     def __init__(self) :
         """Init the learning model"""
+        print("Learning")
         pass
     
     def load(self) :
