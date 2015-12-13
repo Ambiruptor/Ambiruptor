@@ -7,16 +7,19 @@ from ambiruptor.feature_extraction import FeatureExtraction
 from ambiruptor.learning import Learning
 
 data = DataMining()
+
+if not os.path.isfile("data/wikidump.xml") :
+    raise Exception("Use the Makefile !")
+
 if not os.path.isfile("data/wikilinks.bin") :
     data.build("data/wikidump.xml")
     data.export("data/wikilinks.bin")
 else :
     data.load("data/wikilinks.bin")
+
 print(data.get_corpus("Bar"))
 
 #feature = FeatureExtraction()
 #feature.build("Bar")
 
 #learning = Learning()
-
-#git_test
