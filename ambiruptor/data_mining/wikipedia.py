@@ -62,6 +62,7 @@ class DataMining :
         self.links, self.backlinks = pickle.load(f)
         f.close()
     
+    
     def get_corpus(self, title) :
         """
         Get the corpus
