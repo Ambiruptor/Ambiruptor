@@ -1,138 +1,78 @@
-import sys
-import os.path
 import pickle
+import xml.sax
+import os.path
 import re
 
 class DataMining :
     """Abstract class for data mining"""
     
     def __init__(self) :
-        """Init the learning model"""
-        self.wikipedia_file = ""
-        self.wikipedia_fpos = {}
-        self.backlinks_file = ""
-        self.backlinks_fpos = {}
+        """Init"""
+        self.links = {}
+        self.backlinks = {}
         pass
     
-    def build_wikipedia_file(self) :
-        print("Use the Makefile !")
+    def build(self, filename) :
     
-    def load_wikipedia_file(self, filename) :
-        if not os.path.isfile(filename) :
-            raise Exception("Wikidump not found")
-        self.wikipedia_file = filename
+        class Handler(xml.sax.handler.ContentHandler) :
+            def __init__(self) :
+                self.links = {}
+            def setDocumentLocator(self, locator) :
+                print(locator)
+            def startDocument(self) :
+                self.title = ""
+                self.text = ""
+                self.content = []
+            def characters(self, content) :
+                self.content.append(content)
+            def startElement(self, name, args) :
+                if name == "title" :
+                    self.content = []
+                if name == "text" :
+                    self.content = []
+            def endElement(self, name) :
+                if name == "title" :
+                    self.title = "".join(self.content)
+                if name == "text" :
+                    self.text = "".join(self.content)
+                if name == "page" :
+                    regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
+                    self.links[self.title] = regex.findall(self.text)
+        
+        handler = Handler()
+        xml.sax.parse(filename, handler)
+        self.links = handler.links
+        
+        self.backlinks = {}
+        for title in self.links :
+            for link in self.links[title] :
+                if not link in self.backlinks :
+                    self.backlinks[link] = []
+                self.backlinks[link].append(title)
+                
     
-    def build_wikipedia_fpos(self) :
-        if not os.path.isfile(self.wikipedia_file) :
-            raise Exception("wikipedia_file hasn't been build.")
-        
-        f = open(self.wikipedia_file, "rb")
-        f.seek(0, os.SEEK_END)
-        size = f.tell()
-        f.seek(0, os.SEEK_SET)
-        
-        mode_none = 0
-        mode_title = 1
-        mode_text = 2
-        
-        current_mode = mode_none
-        last_checkpoint = 0
-        current_article = (0, 0)
-        
-        tag_title_str = b'<title>'
-        tag_text_str = b'<text xml:space="preserve">'
-        tag_title_pos = 0
-        tag_text_pos = 0
-        tag_title_size = len(tag_title_str)
-        tag_text_size = len(tag_text_str)
-        
-        buff_str = ""
-        buff_size = 0
-        buff_pos = 0
-        
-        result = []
-        
-        for i in range(size) :
-            
-            if 100 * i % size < 100 :
-                print("\rProcessing wikipedia dump :",
-                      100 * i // size, "%", end="", flush=True)
-            
-            buff_pos = buff_pos + 1
-            if buff_pos >= buff_size :
-                buff_pos = 0
-                buff_str = f.read(1<<20)
-                buff_size = len(buff_str)
-            c = buff_str[buff_pos]
-            
-            if c == ord('<') :
-                if current_mode == mode_title :
-                    current_article = (last_checkpoint, i - last_checkpoint)
-                if current_mode == mode_text :
-                    current_text = (last_checkpoint, i - last_checkpoint)
-                    result.append((current_article, current_text))
-                current_mode = mode_none
-            
-            if c == tag_title_str[tag_title_pos] :
-                tag_title_pos = tag_title_pos + 1
-                if tag_title_pos == tag_title_size :
-                    current_mode = mode_title
-                    last_checkpoint = i+1
-                    tag_title_pos = 0
-            else :
-                tag_title_pos = 0
-            
-            if c == tag_text_str[tag_text_pos] :
-                tag_text_pos = tag_text_pos + 1
-                if tag_text_pos == tag_text_size :
-                    current_mode = mode_text
-                    last_checkpoint = i+1
-                    tag_text_pos = 0
-            else :
-                tag_text_pos = 0
-        
-        print()
-        self.wikipedia_fpos = {}
-        for (a,b),y in result :
-            f.seek(a, os.SEEK_SET)
-            self.wikipedia_fpos[f.read(b)] = y   
-    
-    def load_wikipedia_fpos(self, filename) :
-        f = open(filename, "rb")
-        self.wikipedia_fpos = pickle.load(f)
-        f.close()
-    
-    def export_wikipedia_fpos(self, filename) :
+    def export(self, filename) :
         f = open(filename, "wb")
-        pickle.dump(self.wikipedia_fpos, f)
+        pickle.dump((self.links, self.backlinks), f)
         f.close()
     
     
-    def build(self) :
-        print("In order to build the wiki-miner you have to :")
-        print("- Provide a wikidump.")
-        print("- Preprocess the file pointers.")
-        print("- Compute the backlinks")
-        
-    def get_backlinks(self, title) :
-        pass
-    
-    def get_links(self, title) :
-        if not os.path.isfile(self.wikipedia_file) :
-            raise Exception("wikipedia_file hasn't been build.")
-        if not title in self.wikipedia_fpos :
-            raise Exception("Article not found.")
-        f = open(self.wikipedia_file, "rb")
-        f.seek(self.wikipedia_fpos[title][0])
-        article = f.read(self.wikipedia_fpos[title][1]).decode("utf8")
+    def load(self, filename) :
+        f = open(filename, "rb")
+        self.links, self.backlinks = pickle.load(f)
         f.close()
-        regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
-        return regex.findall(article)
     
     def get_corpus(self, title) :
         """
         Get the corpus
         @return : to be defined...
         """
-        print(self.get_links(title))
-
+        if not title in self.links :
+            raise Exception("Article not found.")
+        
+        result = []
+        for x in self.links[title] :
+            if x in self.backlinks :
+                result.extend([(x,y) for y in self.backlinks[x]])
+        return list(set(result))
+        

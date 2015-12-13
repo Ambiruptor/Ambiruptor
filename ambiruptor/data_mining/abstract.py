@@ -2,7 +2,7 @@ class DataMining :
     """Abstract class for data mining"""
     
     def __init__(self) :
-        """Init the learning model"""
+        """Init"""
         pass
     
     def build(self, word) :
