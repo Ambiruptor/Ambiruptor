@@ -18,7 +18,7 @@ class DataMining :
             def __init__(self) :
                 self.links = {}
             def setDocumentLocator(self, locator) :
-                print(locator)
+                pass
             def startDocument(self) :
                 self.title = ""
                 self.text = ""
