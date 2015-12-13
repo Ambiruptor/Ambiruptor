@@ -1,6 +1,7 @@
 import sys
 import os.path
 import pickle
+import re
 
 class DataMining :
     """Abstract class for data mining"""
@@ -30,7 +31,7 @@ class DataMining :
         size = f.tell()
         f.seek(0, os.SEEK_SET)
         
-        mode_none = 0        
+        mode_none = 0
         mode_title = 1
         mode_text = 2
         
@@ -54,7 +55,8 @@ class DataMining :
         for i in range(size) :
             
             if 100 * i % size < 100 :
-                print("\rProcessing wikipedia dump :", 100 * i // size, "%", end="", flush=True)
+                print("\rProcessing wikipedia dump :",
+                      100 * i // size, "%", end="", flush=True)
             
             buff_pos = buff_pos + 1
             if buff_pos >= buff_size :
@@ -67,7 +69,8 @@ class DataMining :
                 if current_mode == mode_title :
                     current_article = (last_checkpoint, i - last_checkpoint)
                 if current_mode == mode_text :
-                    result.append((current_article, (last_checkpoint, i - last_checkpoint)))
+                    current_text = (last_checkpoint, i - last_checkpoint)
+                    result.append((current_article, current_text))
                 current_mode = mode_none
             
             if c == tag_title_str[tag_title_pos] :
@@ -90,11 +93,9 @@ class DataMining :
         
         print()
         self.wikipedia_fpos = {}
-        print(len(result))
         for (a,b),y in result :
             f.seek(a, os.SEEK_SET)
-            self.wikipedia_fpos[f.read(b)] = y
-            
+            self.wikipedia_fpos[f.read(b)] = y   
     
     def load_wikipedia_fpos(self, filename) :
         f = open(filename, "rb")
@@ -106,19 +107,32 @@ class DataMining :
         pickle.dump(self.wikipedia_fpos, f)
         f.close()
     
-    def build(self, word) :
-        """
-        Build a corpus for the ambiguous word
-        @param(word) : string
-        """
-        # Downloading wikipedia
-        filename = "enwiki-20151201-pages-meta-current.xml"
-        print(os.path.relpath(os.path.dirname(__file__)))
-        #if !os.path.isfile(filename)
     
-    def get_corpus(self) :
+    def build(self) :
+        print("In order to build the wiki-miner you have to :")
+        print("- Provide a wikidump.")
+        print("- Preprocess the file pointers.")
+        print("- Compute the backlinks")
+        
+    def get_backlinks(self, title) :
+        pass
+    
+    def get_links(self, title) :
+        if not os.path.isfile(self.wikipedia_file) :
+            raise Exception("wikipedia_file hasn't been build.")
+        if not title in self.wikipedia_fpos :
+            raise Exception("Article not found.")
+        f = open(self.wikipedia_file, "rb")
+        f.seek(self.wikipedia_fpos[title][0])
+        article = f.read(self.wikipedia_fpos[title][1]).decode("utf8")
+        f.close()
+        regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
+        return regex.findall(article)
+    
+    def get_corpus(self, title) :
         """
         Get the corpus
         @return : to be defined...
         """
-        pass
+        print(self.get_links(title))
+

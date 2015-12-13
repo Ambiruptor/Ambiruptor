@@ -15,6 +15,8 @@ else :
     data.export_wikipedia_fpos("data/wikidump_pos.bin")
 print(len(data.wikipedia_fpos), "articles found.")
 
+corpus = data.get_corpus(b'Bar')
+
 #feature = FeatureExtraction()
 #feature.build("Bar")
 
