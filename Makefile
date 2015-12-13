@@ -3,5 +3,6 @@ WIKIDUMP = http://dumps.wikimedia.org/enwiki/20151201/enwiki-20151201-pages-meta
 all: data/wikidump.xml
 
 data/wikidump.xml:
+	mkdir -p data/
 	wget -O $@.bz2 $(WIKIDUMP)
 	bzip2 -d $@.bz2
