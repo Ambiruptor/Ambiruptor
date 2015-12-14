@@ -6,15 +6,15 @@ class DataMining :
         pass
     
     def build(self, param) :
-        """ Store the wini-miner into a binary file """
+        """ Build a data-miner """
         pass
     
     def export(self, filename) :
-        """ Store the wini-miner into a binary file """
+        """ Store the data-miner into a binary file """
         pass
     
     def load(self, filename) :
-        """ Load the wini-miner from a binary file """
+        """ Load the data-miner from a binary file """
         pass
     
     def get_corpus(self, word) :
