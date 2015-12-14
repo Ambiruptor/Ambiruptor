@@ -6,11 +6,11 @@ class Learning :
         print("Learning")
         pass
     
-    def load(self) :
+    def load(self, filename) :
         """Load a model from a binary file"""
         pass
     
-    def export(self) :
+    def export(self, filename) :
         """Store a model into a binary file"""
         pass
     

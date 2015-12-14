@@ -3,9 +3,10 @@
 import os.path, re
 
 from ambiruptor.data_mining.wikipedia import DataMining
-from ambiruptor.feature_extraction import FeatureExtraction
+from ambiruptor.feature_extraction.part_of_speech import FeatureExtraction
 from ambiruptor.learning import Learning
 
+print("--------- Data Mining ---------")
 data = DataMining()
 
 if not os.path.isfile("data/wikidump.xml") :
@@ -19,7 +20,15 @@ else :
 
 print(data.get_corpus("Bar"))
 
-#feature = FeatureExtraction()
-#feature.build("Bar")
 
-#learning = Learning()
+print("--------- feature Extraction ---------")
+
+s = """Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+       sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"""
+feature = FeatureExtraction()
+print(feature.extract(s, 3))
+
+
+print("--------- Learning ---------")
+
+learning = Learning()

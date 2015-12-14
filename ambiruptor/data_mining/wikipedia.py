@@ -4,21 +4,19 @@ import os.path
 import re
 
 class DataMining :
-    """Abstract class for data mining"""
+    """ Class for wiki mining with a xml dump file. """
     
     def __init__(self) :
-        """Init"""
+        """ Inititialize the wiki-miner """
         self.links = {}
         self.backlinks = {}
-        pass
     
     def build(self, filename) :
+        """ Build the wiki-miner. """
     
         class Handler(xml.sax.handler.ContentHandler) :
             def __init__(self) :
                 self.links = {}
-            def setDocumentLocator(self, locator) :
-                pass
             def startDocument(self) :
                 self.title = ""
                 self.text = ""
@@ -52,27 +50,29 @@ class DataMining :
                 
     
     def export(self, filename) :
+        """ Store the wini-miner into a binary file """
         f = open(filename, "wb")
         pickle.dump((self.links, self.backlinks), f)
         f.close()
     
     
     def load(self, filename) :
+        """ Load the wini-miner from a binary file """
         f = open(filename, "rb")
         self.links, self.backlinks = pickle.load(f)
         f.close()
     
     
-    def get_corpus(self, title) :
+    def get_corpus(self, word) :
         """
         Get the corpus
         @return : to be defined...
         """
-        if not title in self.links :
+        if not word in self.links :
             raise Exception("Article not found.")
         
         result = []
-        for x in self.links[title] :
+        for x in self.links[word] :
             if x in self.backlinks :
                 result.extend([(x,y) for y in self.backlinks[x]])
         return list(set(result))
