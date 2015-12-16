@@ -97,14 +97,6 @@ class FeatureExtractor(object):
         pass
 
     @abstractmethod
-    def build(self, word):
-        """
-        Build the feature extractor with the ambiguous word
-        @param(word) : string
-        """
-        pass
-
-    @abstractmethod
     def load(self):
         """Load a feature extractor from a binary file"""
         pass
@@ -115,11 +107,9 @@ class FeatureExtractor(object):
         pass
 
     @abstractmethod
-    def extract(self, window, pos):
-        """
-        Extract a features vector.
-        @param(window) : string
-        @param(pos) : integer (position of the word in the sentence)
-        @return : vector of features
-        """
+    def extract_targets(self, text, senses):
+        pass
+
+    @abstractmethod
+    def extract_features(self, text, senses):
         pass
