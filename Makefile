@@ -6,3 +6,5 @@ data/wikidump.xml:
 	mkdir -p data/
 	wget -O $@.bz2 $(WIKIDUMP)
 	bzip2 -d $@.bz2
+	python setup.py install
+
