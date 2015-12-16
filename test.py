@@ -25,7 +25,11 @@ print("--------- feature Extraction ---------")
 
 s = """Lorem ipsum dolor sit amet, consectetur adipiscing elit,
        sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"""
-feature = FeatureExtraction("Bar")
+try:
+    feature = FeatureExtraction("Bar")
+except LookupError as e:
+    print(e.args[0])
+    exit(1)
 print(feature.extract(s, 3))
 
 
