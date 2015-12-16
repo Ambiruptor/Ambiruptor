@@ -3,9 +3,9 @@ class FeatureExtraction :
 
     def __init__(self, word) :
         """ Initialize the feature extractor. """
-        #try :
-        #    self.load("data/collocations/"+word+".data")
-        #except FileNotFoundError :
+        try :
+            self.load("data/collocations/"+word+".data")
+        except FileNotFoundError :
         self.build(word)
 
     def build(self, word) :
