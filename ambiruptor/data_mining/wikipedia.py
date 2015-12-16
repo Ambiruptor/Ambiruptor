@@ -15,6 +15,7 @@ class DataMining :
         """ Build the wiki-miner. """
     
         class Handler(xml.sax.handler.ContentHandler) :
+            page_regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
             def __init__(self) :
                 self.links = {}
             def startDocument(self) :
@@ -24,18 +25,13 @@ class DataMining :
             def characters(self, content) :
                 self.content.append(content)
             def startElement(self, name, args) :
-                if name == "title" :
-                    self.content = []
-                if name == "text" :
+                if name in ("title", "text"):
                     self.content = []
             def endElement(self, name) :
-                if name == "title" :
+                if name in ("title", "text") :
                     self.title = "".join(self.content)
-                if name == "text" :
-                    self.text = "".join(self.content)
-                if name == "page" :
-                    regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
-                    self.links[self.title] = regex.findall(self.text)
+                elif name == "page" :
+                    self.links[self.title] = self.page_regex.findall(self.text)
         
         handler = Handler()
         xml.sax.parse(filename, handler)
