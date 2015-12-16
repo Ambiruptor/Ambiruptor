@@ -3,7 +3,7 @@
 import os.path, re
 
 from ambiruptor.data_mining.wikipedia import DataMining
-from ambiruptor.feature_extraction.close_words import FeatureExtraction
+from ambiruptor.feature_extraction.collocations import FeatureExtraction
 from ambiruptor.learning import Learning
 
 print("--------- Data Mining ---------")
@@ -23,8 +23,8 @@ print(data.get_corpus("Bar"))
 
 print("--------- feature Extraction ---------")
 
-s = """Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-       sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"""
+s = """Lorem ipsum dolor sit amet, consectetur containing adipiscing elit,
+       sed do eiusmod tempor Wording incididunt happiness ut labore et dolore magna aliqua"""
 feature = FeatureExtraction("Bar")
 print(feature.extract(s, 3))
 

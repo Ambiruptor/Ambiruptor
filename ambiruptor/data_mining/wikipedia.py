@@ -5,15 +5,15 @@ import re
 
 class DataMining :
     """ Class for wiki mining with a xml dump file. """
-    
+
     def __init__(self) :
         """ Inititialize the wiki-miner """
         self.links = {}
         self.backlinks = {}
-    
+
     def build(self, filename) :
         """ Build the wiki-miner. """
-    
+
         class Handler(xml.sax.handler.ContentHandler) :
             def __init__(self) :
                 self.links = {}
@@ -36,33 +36,33 @@ class DataMining :
                 if name == "page" :
                     regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
                     self.links[self.title] = regex.findall(self.text)
-        
+
         handler = Handler()
         xml.sax.parse(filename, handler)
         self.links = handler.links
-        
+
         self.backlinks = {}
         for title in self.links :
             for link in self.links[title] :
                 if not link in self.backlinks :
                     self.backlinks[link] = []
                 self.backlinks[link].append(title)
-                
-    
+
+
     def export(self, filename) :
-        """ Store the wini-miner into a binary file """
+        """ Store the wiki-miner into a binary file """
         f = open(filename, "wb")
         pickle.dump((self.links, self.backlinks), f)
         f.close()
     
-    
+
     def load(self, filename) :
-        """ Load the wini-miner from a binary file """
+        """ Load the wiki-miner from a binary file """
         f = open(filename, "rb")
         self.links, self.backlinks = pickle.load(f)
         f.close()
-    
-    
+
+
     def get_corpus(self, word) :
         """
         Get the corpus
@@ -70,10 +70,9 @@ class DataMining :
         """
         if not word in self.links :
             raise Exception("Article not found.")
-        
+
         result = []
         for x in self.links[word] :
             if x in self.backlinks :
                 result.extend([(x,y) for y in self.backlinks[x]])
         return list(set(result))
-        
