@@ -6,7 +6,7 @@ class FeatureExtraction :
         try :
             self.load("data/collocations/"+word+".data")
         except FileNotFoundError :
-        self.build(word)
+            self.build(word)
 
     def build(self, word) :
         """
@@ -31,9 +31,7 @@ class FeatureExtraction :
                         sent=sent.replace("\n", " ").replace(",", "").split(" ")
                         ind=sent.index(word)
                         if ind + lo > -1 and ind+hi < len(sent):
-                            print(sent)
                             all_collocs+=(" ".join([x.lower() for x in sent[ind+lo:ind+hi+1]]),)
-                            print(lo,hi, " ".join([x.lower() for x in sent[ind+lo:ind+hi+1]]))
 
         #compute counts
         all_collocs_occ=list(set(all_collocs))
@@ -69,5 +67,4 @@ class FeatureExtraction :
         @param(pos) : integer (position of the word in the sentence)
         @return : vector of features
         """
-        print(self.usual_collocs)
         return([window.count(colloc) for colloc in self.usual_collocs])
