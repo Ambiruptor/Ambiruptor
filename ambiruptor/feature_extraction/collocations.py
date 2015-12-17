@@ -17,7 +17,7 @@ class FeatureExtraction :
 
         text_corpus='blablabla bar'
         sentences=text_corpus.replace("?", ".").replace("!", ".").split(". ")
-        all_collocs=()
+        all_collocs=[]
 
         word=word.lower()
 
@@ -27,16 +27,16 @@ class FeatureExtraction :
             for hi in range(0, window_size+1):
                 #compute every collocation from lo to hi
                 for sent in sentences:
+                    sent=sent.replace(", ", " ").split()
                     if word in sent:
-                        sent=sent.replace("\n", " ").replace(",", "").split(" ")
                         ind=sent.index(word)
                         if ind + lo > -1 and ind+hi < len(sent):
-                            all_collocs+=(" ".join([x.lower() for x in sent[ind+lo:ind+hi+1]]),)
+                            all_collocs.append(" ".join([x.lower() for x in sent[ind+lo:ind+hi+1]]))
 
         #compute counts
-        all_collocs_occ=list(set(all_collocs))
-        for indcol in range(0, len(all_collocs_occ)):
-            all_collocs_occ[indcol]=[all_collocs_occ[indcol], all_collocs.count(all_collocs_occ[indcol])]
+        all_collocs_occ=[]
+        for col in set(all_collocs):
+            all_collocs_occ.append((col, all_collocs.count(col)))
 
         #sort by decreasing order of count*(hi-lo) to give importance to long collocations
         all_collocs_occ.sort(key=lambda x: -(x[1]*len(x[0])))
