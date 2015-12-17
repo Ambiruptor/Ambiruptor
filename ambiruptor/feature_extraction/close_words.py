@@ -31,18 +31,18 @@ class FeatureExtraction :
         stemmer = PorterStemmer()
 
         sentences=corpus_text.replace("!", ".").replace("?", ".").split('. ')
-        words_same_sentence=()
+        words_same_sentence=[]
         #fill the list of words
         for sent in sentences :
-            if(word in sent):
-                sent=sent.replace("\n", " ").replace(", ", " ").replace('=', '').split(" ")
+            sent=sent.replace(", ", " ").replace('=', '').split()
+            if word in sent :
                 for other_word in sent :
-                    if(not(other_word.lower() in stopwords.words("english")) and not (other_word=='')):
-                        words_same_sentence += (stemmer.stem(other_word.lower()), )
+                    if other_word.lower() not in stopwords.words("english") and other_word!='' :
+                        words_same_sentence.append(stemmer.stem(other_word.lower()))
         #count the occurence of each other word that appear in the same sentence
-        words_same_sentence_occ=list(set(words_same_sentence)-set([word]))
-        for w in range(len(words_same_sentence_occ)):
-            words_same_sentence_occ[w]=[words_same_sentence_occ[w], words_same_sentence.count(words_same_sentence_occ[w])]
+        words_same_sentence_occ=[]
+        for w in set(words_same_sentence)-{word} :
+            words_same_sentence_occ.append((w, words_same_sentence.count(w)))
 
         #sort by decreasing order of count
         words_same_sentence_occ.sort(key=lambda x: -x[1])
@@ -50,7 +50,7 @@ class FeatureExtraction :
         #take the first size words
         size=15
         self.usual_words=[x[0] for x in words_same_sentence_occ][:size]
-       # self.export("data/close_words/"+word+".data")
+        self.export("data/close_words/"+word+".data")
 
 
     def load(self, filename) :

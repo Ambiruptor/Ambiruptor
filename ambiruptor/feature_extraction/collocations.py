@@ -44,6 +44,8 @@ class FeatureExtraction :
         size=10
         #take the first size collocations
         self.usual_collocs=[col[0] for col in all_collocs_occ[:size]]
+        #export
+        self.export("data/collocations/"+word+".data")
 
 
 
