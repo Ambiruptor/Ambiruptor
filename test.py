@@ -3,6 +3,7 @@
 import os.path, re
 
 from ambiruptor.data_mining.wikipedia import DataMining
+from ambiruptor.data_mining.wikimedia import DataMining as DataMining2
 from ambiruptor.feature_extraction.part_of_speech import FeatureExtraction
 from ambiruptor.learning import Learning
 
@@ -18,8 +19,11 @@ if not os.path.isfile("data/wikilinks.bin") :
 else :
     data.load("data/wikilinks.bin")
 
-print(data.get_corpus("Bar"))
+print(len(data.get_corpus("Bar")))
 
+print("--------- Data Mining ---------")
+data = DataMining2()
+print(len(data.get_corpus("Bar")))
 
 print("--------- feature Extraction ---------")
 
