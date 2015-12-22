@@ -21,7 +21,7 @@ To avoid manual installation and to easily set up development environment you ma
 ### Configuration using Anaconda
 
 "Anaconda is an easy-to-install, free package manager, environment manager, Python distribution, and collection of over 150 open source packages with free community support."
-* [link](http://docs.continuum.io/anaconda/index)
+* [Docs](http://docs.continuum.io/anaconda/index)
 * [Downloads](https://www.continuum.io/downloads)
 
 ### Create virtual environment
