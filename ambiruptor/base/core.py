@@ -99,9 +99,16 @@ class FeatureExtractor(object):
         """Store a feature extractor into a binary file"""
         pass
 
-    @abstractmethod
     def extract_targets(self, text, senses):
-        pass
+        """
+        Takes plain text and
+        dict of ambiguous words to look for
+        as arguments
+        """
+        words = word_tokenize(text)
+        for i, w in enumerate(words):
+            if w in senses.keys():
+                self.targets.append((i, w))
 
     @abstractmethod
     def extract_features(self, text, senses):
