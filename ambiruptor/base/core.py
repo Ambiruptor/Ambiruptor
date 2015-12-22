@@ -72,20 +72,13 @@ class Miner(object):
         pass
 
     @abstractmethod
-    def build(self, word):
-        """
-        Build a corpus for the ambiguous word
-        @param(word) : string
-        """
-        print("Data mining : " + word)
+    def build(self):
+        """Build a corpus"""
         pass
 
     @abstractmethod
-    def get_corpus(self):
-        """
-        Get the corpus
-        @return : to be defined...
-        """
+    def get_corpus(self, word):
+        """Get the corpus"""
         pass
 
 

@@ -60,12 +60,10 @@ def generate_train_data():
 
 if __name__ == '__main__':
     data = DataMining()
-    if not os.path.isfile("data/wikilinks.bin"):
-        data.build("data/wikidump.xml")
-        data.export("data/wikilinks.bin")
-    else:
-        data.load("data/wikilinks.bin")
-        print(data.get_corpus("Bar"))
+    data.set_wikidump_filename("data/wikidump.xml")
+    data.set_database_filename("data/wikidump.db")
+    data.build()
+    print(data.get_corpus("Bar"))
 
     # Test learning with Dummy Feature Extarctor
     train_data = generate_train_data()

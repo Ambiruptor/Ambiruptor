@@ -1,3 +1,4 @@
+import sqlite3
 import pickle
 import xml.sax
 import re
@@ -10,72 +11,89 @@ class DataMining(Miner):
 
     def __init__(self):
         """Init"""
-        self.links = {}
-        self.backlinks = {}
+        self.wikidump_filename = None
+        self.database_filename = None
         pass
-
-    def build(self, filename):
+    
+    def set_wikidump_filename(self, filename) :
+        self.wikidump_filename = filename
+    
+    def set_database_filename(self, filename) :
+        self.database_filename = filename
+    
+    def build(self):
+        
+        # Checking if filenames have been provided.
+        if self.wikidump_filename == None :
+            raise Exception("No wikidump filename provided.")
+        if self.database_filename == None :
+            raise Exception("No database filename provided.")
+        
+        # SQLite database connection
+        conn = sqlite3.connect(self.database_filename)
+        
+        # Checking if the database has already been build
+        req = '''select count(*) from sqlite_master where type = "table"'''
+        if conn.execute(req).fetchone()[0] > 0 :
+            print("The database has already been build.")
+            conn.close();
+            return
+        
+        # Otherwise, let's build the database
+        print("Let's build the database =)")
+        
+        # Create the main table
+        req = '''CREATE TABLE articles
+                 (id         INTEGER,
+                  title      TEXT,
+                  text       TEXT,
+                  namespace  INTEGER)'''
+        conn.execute(req)
+        
+        # Create the links table
+        req = '''CREATE TABLE links
+                 (id_from INTEGER,
+                  id_to   INTEGER)'''
+        conn.execute(req)
+        
+        # Handler for xml.sax parser.
         class Handler(xml.sax.handler.ContentHandler):
             def __init__(self):
-                self.links = {}
-
-            def setDocumentLocator(self, locator):
-                pass
-
-            def startDocument(self):
-                self.title = ""
-                self.text = ""
                 self.content = []
+                self.data = {}
 
             def characters(self, content):
                 self.content.append(content)
 
             def startElement(self, name, args):
-                if name == "title":
+                if name in ["title", "text", "ns", "id"] :
                     self.content = []
-                if name == "text":
-                    self.content = []
+                if name == "page" :
+                    self.data = {}
 
             def endElement(self, name):
-                if name == "title":
-                    self.title = "".join(self.content)
-                if name == "text":
-                    self.text = "".join(self.content)
+                if name in ["title", "text", "ns", "id"] :
+                    self.data[name] = "".join(self.content)
                 if name == "page":
-                    regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
-                    self.links[self.title] = regex.findall(self.text)
-
+                    req = '''INSERT INTO articles VALUES (?,?,?,?)'''
+                    param = (int(self.data["id"]), self.data["title"], self.data["text"], self.data["ns"])
+                    conn.execute(req, param)
+                    
+        
         handler = Handler()
-        xml.sax.parse(filename, handler)
-        self.links = handler.links
+        xml.sax.parse(self.wikidump_filename, handler)
 
-        self.backlinks = {}
-        for title in self.links:
-            for link in self.links[title]:
-                if link not in self.backlinks:
-                    self.backlinks[link] = []
-                self.backlinks[link].append(title)
+        conn.commit()
+        conn.close()
+        
+        """regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
+        links = regex.findall(self.data["text"])"""
 
-    def export(self, filename):
-        f = open(filename, "wb")
-        pickle.dump((self.links, self.backlinks), f)
-        f.close()
-
-    def load(self, filename):
-        f = open(filename, "rb")
-        self.links, self.backlinks = pickle.load(f)
-        f.close()
-
-    def get_corpus(self, title):
-        """
-        Get the corpus
-        @return : to be defined...
-        """
-        if title not in self.links:
-            raise Exception("Article not found.")
-
-        result = []
-        for x in self.links[title]:
-            if x in self.backlinks:
-                result.extend([(x, y) for y in self.backlinks[x]])
-        return list(set(result))
+    def get_corpus(self, word):
+        """Get the corpus"""
+        
+        conn = sqlite3.connect(self.database_filename)
+        req = '''SELECT COUNT(*) FROM articles'''
+        result = conn.execute(req).fetchone()[0]
+        conn.close()
+        return result
