@@ -20,25 +20,24 @@ To avoid manual installation and to easily set up development environment you ma
 
 ### Configuration using Anaconda
 
-"Anaconda is an easy-to-install, free package manager, environment manager, Python distribution, and collection of over 150 open source packages with free community support." [link](http://docs.continuum.io/anaconda/index)
-
-[Downloads](https://www.continuum.io/downloads)
+"Anaconda is an easy-to-install, free package manager, environment manager, Python distribution, and collection of over 150 open source packages with free community support."
+* [link](http://docs.continuum.io/anaconda/index)
+* [Downloads](https://www.continuum.io/downloads)
 
 ### Create virtual environment
+
 ```
-conda create --name ambi python=3
+conda create --name ambiruptor python=3
 ```
 
 ### Setup environment
 
 To activate the virtual environment
-
 ```
-source activate ambi
+source activate ambiruptor
 ```
 
 To install required dependencies
-
 ```
 conda install --file requirements.txt
 ```
