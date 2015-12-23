@@ -12,8 +12,8 @@ class Wikipedia :
             raise TypeError("bytes or str expected")
         if type(title) == str :
             title = title.encode("utf8")
-        # TODO : Wikipedia namin conventions...
-        return int(hashlib.sha1(title).hexdigest(), 16) % (2 ** 31 - 1)
+        # TODO : Wikipedia naming conventions...
+        return int(hashlib.sha1(title).hexdigest(), 16) % (2 ** 61 - 1)
     
     def get_links(text) :
         regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
