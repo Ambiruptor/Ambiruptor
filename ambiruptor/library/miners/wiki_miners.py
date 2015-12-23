@@ -112,11 +112,11 @@ class DataMining(Miner):
                     req = """INSERT INTO backlinks VALUES (?,?)"""
                     conn.executemany(req, list(set(params)))
                     
+                    conn.commit()
         
         handler = Handler()
         xml.sax.parse(self.wikidump_filename, handler)
 
-        conn.commit()
         conn.close()
         
 
