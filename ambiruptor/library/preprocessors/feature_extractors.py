@@ -69,7 +69,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     '''size of the feature vector we build'''
 
     def __init__(self, word):
-    """ Initialize the feature extractor. """
+        """ Initialize the feature extractor."""
         self.targets=list()
 
 
@@ -135,11 +135,11 @@ class CollocationsFeatureExtractor(FeatureExtractor):
     '''size of the feature vector we build'''
 
     def __init__(self, word):
-    """ Initialize the feature extractor. """
+        """ Initialize the feature extractor. """
         self.targets=list()
 
     def build_collocations(self, word):
-    ''' Builds a list of frequent collocations'''
+        ''' Builds a list of frequent collocations'''
         text_corpus='blablabla bar'
         sentences=text_corpus.replace("?", ".").replace("!", ".").split(". ")
         all_collocs=[]

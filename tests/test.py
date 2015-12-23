@@ -64,7 +64,7 @@ if __name__ == '__main__':
     data.set_database_filename("data/wikidump.db")
     data.build()
     print(data.get_corpus("Bar"))
-
+    
     # Test learning with Dummy Feature Extarctor
     train_data = generate_train_data()
 

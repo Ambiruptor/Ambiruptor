@@ -1,10 +1,23 @@
 import sqlite3
-import pickle
+import hashlib
 import xml.sax
 import re
 
 from ambiruptor.base.core import Miner
 
+class Wikipedia :
+
+    def id_from_title(title) :
+        if type(title) not in [ bytes, str ] :
+            raise TypeError("bytes or str expected")
+        if type(title) == str :
+            title = title.encode("utf8")
+        # TODO : Wikipedia namin conventions...
+        return int(hashlib.sha1(title).hexdigest(), 16) % (2 ** 31 - 1)
+    
+    def get_links(text) :
+        regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
+        return regex.findall(text)
 
 class DataMining(Miner):
     """Abstract class for data mining"""
@@ -13,7 +26,6 @@ class DataMining(Miner):
         """Init"""
         self.wikidump_filename = None
         self.database_filename = None
-        pass
     
     def set_wikidump_filename(self, filename) :
         self.wikidump_filename = filename
@@ -33,7 +45,7 @@ class DataMining(Miner):
         conn = sqlite3.connect(self.database_filename)
         
         # Checking if the database has already been build
-        req = '''select count(*) from sqlite_master where type = "table"'''
+        req = """SELECT COUNT(*) FROM sqlite_master WHERE type='table'"""
         if conn.execute(req).fetchone()[0] > 0 :
             print("The database has already been build.")
             conn.close();
@@ -43,17 +55,25 @@ class DataMining(Miner):
         print("Let's build the database =)")
         
         # Create the main table
-        req = '''CREATE TABLE articles
-                 (id         INTEGER,
+        req = """CREATE TABLE articles
+                 (id         INTEGER PRIMARY KEY,
                   title      TEXT,
                   text       TEXT,
-                  namespace  INTEGER)'''
+                  namespace  INTEGER)"""
         conn.execute(req)
         
         # Create the links table
-        req = '''CREATE TABLE links
+        req = """CREATE TABLE links
                  (id_from INTEGER,
-                  id_to   INTEGER)'''
+                  id_to   INTEGER,
+                  PRIMARY KEY(id_from, id_to))"""
+        conn.execute(req)
+        
+        # Create the backlinks table
+        req = """CREATE TABLE backlinks
+                 (id_from INTEGER,
+                  id_to   INTEGER,
+                  PRIMARY KEY(id_to, id_from))"""
         conn.execute(req)
         
         # Handler for xml.sax parser.
@@ -75,9 +95,22 @@ class DataMining(Miner):
                 if name in ["title", "text", "ns", "id"] :
                     self.data[name] = "".join(self.content)
                 if name == "page":
-                    req = '''INSERT INTO articles VALUES (?,?,?,?)'''
-                    param = (int(self.data["id"]), self.data["title"], self.data["text"], self.data["ns"])
+                    req = """INSERT INTO articles VALUES (?,?,?,?)"""
+                    param = (Wikipedia.id_from_title(self.data["title"]),
+                             self.data["title"],
+                             self.data["text"],
+                             self.data["ns"])
                     conn.execute(req, param)
+                    
+                    links = Wikipedia.get_links(self.data["text"])
+                    id_act = Wikipedia.id_from_title(self.data["title"])
+                    params = [(id_act, Wikipedia.id_from_title(x)) for x in links]
+                    
+                    req = """INSERT INTO links VALUES (?,?)"""
+                    conn.executemany(req, list(set(params)))
+                    
+                    req = """INSERT INTO backlinks VALUES (?,?)"""
+                    conn.executemany(req, list(set(params)))
                     
         
         handler = Handler()
@@ -86,14 +119,23 @@ class DataMining(Miner):
         conn.commit()
         conn.close()
         
-        """regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
-        links = regex.findall(self.data["text"])"""
 
     def get_corpus(self, word):
         """Get the corpus"""
         
         conn = sqlite3.connect(self.database_filename)
-        req = '''SELECT COUNT(*) FROM articles'''
-        result = conn.execute(req).fetchone()[0]
+        
+        req = """SELECT id_to FROM links WHERE id_from=%s"""
+        param = str(Wikipedia.id_from_title(word))
+        senses_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
+        
+        req = """SELECT id_from FROM backlinks WHERE id_to IN (%s)"""
+        param = ",".join([str(x) for x in senses_ids])
+        corpus_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
+        
+        req = """SELECT title FROM articles WHERE id IN (%s)"""
+        param = ",".join([str(x) for x in corpus_ids])
+        corpus = [ x[0] for x in conn.execute(req % param).fetchall()]
+        
         conn.close()
-        return result
+        return corpus
