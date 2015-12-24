@@ -7,13 +7,13 @@ from ambiruptor.base.core import Miner
 
 class Wikipedia :
 
-    def id_from_title(title) :
+    def normalize_title(title) :
         if type(title) not in [ bytes, str ] :
             raise TypeError("bytes or str expected")
-        if type(title) == str :
-            title = title.encode("utf8")
+        if type(title) == bytes :
+            title = title.decode("utf8")
         # TODO : Wikipedia naming conventions...
-        return int(hashlib.sha1(title).hexdigest(), 16) % (2 ** 61 - 1)
+        return title.replace(" ", "_")
     
     def get_links(text) :
         regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
@@ -54,26 +54,23 @@ class DataMining(Miner):
         # Otherwise, let's build the database
         print("Let's build the database =)")
         
+        conn.execute("PRAGMA main.synchronous  = OFF")
+        conn.execute("PRAGMA main.locking_mode = EXCLUSIVE")
+        conn.execute("PRAGMA main.journal_mode = OFF")
+        conn.execute("PRAGMA main.auto_vacuum  = NONE")
+        conn.execute("PRAGMA main.page_size    = 65536")
+        
         # Create the main table
         req = """CREATE TABLE articles
-                 (id         INTEGER PRIMARY KEY,
-                  title      TEXT,
-                  text       TEXT,
-                  namespace  INTEGER)"""
+                 (id        TEXT,
+                  text      TEXT,
+                  namespace INTEGER)"""
         conn.execute(req)
         
         # Create the links table
         req = """CREATE TABLE links
-                 (id_from INTEGER,
-                  id_to   INTEGER,
-                  PRIMARY KEY(id_from, id_to))"""
-        conn.execute(req)
-        
-        # Create the backlinks table
-        req = """CREATE TABLE backlinks
-                 (id_from INTEGER,
-                  id_to   INTEGER,
-                  PRIMARY KEY(id_to, id_from))"""
+                 (id_from TEXT,
+                  id_to   TEXT)"""
         conn.execute(req)
         
         # Handler for xml.sax parser.
@@ -86,54 +83,61 @@ class DataMining(Miner):
                 self.content.append(content)
 
             def startElement(self, name, args):
-                if name in ["title", "text", "ns", "id"] :
+                if name in ["title", "text", "ns"] :
                     self.content = []
                 if name == "page" :
                     self.data = {}
 
             def endElement(self, name):
-                if name in ["title", "text", "ns", "id"] :
+                if name in ["title", "text", "ns"] :
                     self.data[name] = "".join(self.content)
                 if name == "page":
-                    req = """INSERT INTO articles VALUES (?,?,?,?)"""
-                    param = (Wikipedia.id_from_title(self.data["title"]),
-                             self.data["title"],
+                    req = """INSERT INTO articles VALUES (?,?,?)"""
+                    param = (Wikipedia.normalize_title(self.data["title"]),
                              self.data["text"],
                              self.data["ns"])
                     conn.execute(req, param)
                     
+                    act_title = Wikipedia.normalize_title(self.data["title"])
                     links = Wikipedia.get_links(self.data["text"])
-                    id_act = Wikipedia.id_from_title(self.data["title"])
-                    params = [(id_act, Wikipedia.id_from_title(x)) for x in links]
+                    links = map(Wikipedia.normalize_title, links)
+                    params = [(act_title, x) for x in links]
                     
                     req = """INSERT INTO links VALUES (?,?)"""
                     conn.executemany(req, list(set(params)))
-                    
-                    req = """INSERT INTO backlinks VALUES (?,?)"""
-                    conn.executemany(req, list(set(params)))
+        
         
         handler = Handler()
         xml.sax.parse(self.wikidump_filename, handler)
-                    
+        print("Indexes...")
+        
+        req = """CREATE INDEX index_articles ON articles(id)"""
+        conn.execute(req)
+        
+        req = """CREATE INDEX index_links_from ON links(id_from)"""
+        conn.execute(req)
+        
+        req = """CREATE INDEX index_links_to ON links(id_to)"""
+        conn.execute(req)
+        
         conn.commit()
         conn.close()
         
 
     def get_corpus(self, word):
         """Get the corpus"""
-        
         conn = sqlite3.connect(self.database_filename)
         
-        req = """SELECT id_to FROM links WHERE id_from=%s"""
-        param = str(Wikipedia.id_from_title(word))
+        req = """SELECT id_to FROM links WHERE id_from='%s'"""
+        param = str(word)
         senses_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
         
-        req = """SELECT id_from FROM backlinks WHERE id_to IN (%s)"""
-        param = ",".join([str(x) for x in senses_ids])
+        req = """SELECT id_from FROM links WHERE id_to IN %s"""
+        param = "{}".format(tuple(senses_ids))
         corpus_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
         
-        req = """SELECT title FROM articles WHERE id IN (%s)"""
-        param = ",".join([str(x) for x in corpus_ids])
+        req = """SELECT * FROM articles WHERE id IN %s"""
+        param = "{}".format(tuple(corpus_ids))
         corpus = [ x[0] for x in conn.execute(req % param).fetchall()]
         
         conn.close()
