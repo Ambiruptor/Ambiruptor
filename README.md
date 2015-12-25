@@ -50,6 +50,7 @@ git clone git@github.com:Ambiruptor/Ambiruptor.git
 ```
 Then just use the **Makefile** to download / compile the basics needed files.
 
+*TODO : ```nltk.download()```*
 
 ## Run tests
 
