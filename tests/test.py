@@ -4,11 +4,10 @@ import os.path
 import re
 
 from ambiruptor.library.preprocessors.data_structures import TrainData
-from ambiruptor.library.preprocessors.feature_extractors \
-    import DummyFeatureExtractor
 from ambiruptor.library.learners.models import LinearSVMClassifier
 from ambiruptor.library.miners.wiki_miners import DataMining
 
+import ambiruptor.library.preprocessors.feature_extractors as fe
 
 def generate_train_data():
     iris = datasets.load_iris()
@@ -59,12 +58,36 @@ def generate_train_data():
 
 
 if __name__ == '__main__':
+
+    # Data Mining
     data = DataMining()
     data.set_wikidump_filename("data/wikidump.xml")
     data.set_database_filename("data/wikidump.db")
     data.build()
-    print(data.get_corpus("Bar"))
+    corpus = data.get_corpus("Bar")
     
+    print(len(corpus))
+    
+    
+    # Feature extraction
+    feature_extractor = fe.AmbiguousExtraction()
+    feature_extractor.add_feature(fe.DummyFeatureExtractor())
+    feature_extractor.add_feature(fe.DummyFeatureExtractor())
+    
+    text = """Lorem flower ipsum dolor sit amet, thething food
+     consectetur adipiscing elit, sed do thething eiusmod
+     tempor incididunt ut labore et dolore magna aliqua. Ut enim
+     ad food minim veniam, flower quis nostrud exercitation ullamco
+     laboris nisi ut aliquip food ex ea commodo consequat. Duis aute
+     irure dolor in food reprehenderit flower in voluptate velit esse
+     cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+     food cupidatat non food proident thething, sunt in culpa qui thething
+     officia flower deserunt mollit anim flower id est laborum"""
+    
+    features = feature_extractor.extract_features(text, "flower")
+    print(features.data)
+    
+    '''
     # Test learning with Dummy Feature Extarctor
     train_data = generate_train_data()
 
@@ -84,4 +107,4 @@ if __name__ == '__main__':
     fe = DummyFeatureExtractor()
     data = fe.extract_features(text, train_data.senses)
     labels = model.predict(data)
-    print(labels)
+    print(labels)'''

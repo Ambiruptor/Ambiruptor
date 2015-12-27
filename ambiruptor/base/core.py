@@ -1,6 +1,7 @@
 """ Core base classes """
 
 from abc import ABCMeta, abstractmethod
+from nltk import word_tokenize
 
 
 class DocStringInheritor(ABCMeta):
@@ -28,88 +29,86 @@ class DocStringInheritor(ABCMeta):
         return ABCMeta.__new__(meta, name, bases, clsdict)
 
 
-class Learner(object):
+class Learner(object, metaclass=DocStringInheritor):
     """Abstract class for learning"""
-
-    __metaclass__ = DocStringInheritor
 
     def __init__(self):
         """Init the learning model"""
-        pass
 
     @abstractmethod
     def train(self, train_data):
-        """Train the model using the training set"""
-        pass
+        """Train the model using the training set
+        train_data -- instance of TrainData
+        """
 
     @abstractmethod
     def predict(self, data):
+        """Guess the best sense for a features vector
+        data -- instance of AmbiguousData
         """
-        Guess the best sense for a features vector
-        @param(vector) : features vector
-        @return : word sense
-        """
-        pass
 
-    @abstractmethod
     def load(self, filename):
         """Load a model from a binary file"""
-        pass
+        with open(filename, 'rb') as f:
+            tmp_dict = pickle.loads(f)
+        if tmp_dict is not None:
+            self.__dict__ = tmp_dict
 
-    @abstractmethod
     def export(self, filename):
         """Store a model into a binary file"""
-        pass
+        with open(filename, 'wb') as f:
+            pickle.dump(self.__dict__, f)
 
 
-class Miner(object):
+class Miner(object, metaclass=DocStringInheritor):
     """Abstract class for data mining"""
-
-    __metaclass__ = DocStringInheritor
 
     def __init__(self):
         """Init"""
-        pass
-
+    
     @abstractmethod
     def build(self):
         """Build a corpus"""
-        pass
 
     @abstractmethod
     def get_corpus(self, word):
         """Get the corpus"""
-        pass
+
+    def load(self, filename):
+        """Load a model from a binary file"""
+        with open(filename, 'rb') as f:
+            tmp_dict = pickle.loads(f)
+        if tmp_dict is not None:
+            self.__dict__ = tmp_dict
+
+    def export(self, filename):
+        """Store a model into a binary file"""
+        with open(filename, 'wb') as f:
+            pickle.dump(self.__dict__, f)
 
 
-class FeatureExtractor(object):
+class FeatureExtractor(object, metaclass=DocStringInheritor):
     """Abstract class for feature extraction"""
-
+    
     def __init__(self):
         """Init the feature extractor"""
-        pass
-
+    
     @abstractmethod
-    def load(self):
-        """Load a feature extractor from a binary file"""
-        pass
+    def extract_features(words, targets):
+        """Extract feature vectors
+        words -- vector of word
+        targets -- list of target's indexes
+        return -- 2D-vector containing features"""
+    
+    def load(self, filename):
+        """Load a model from a binary file"""
+        with open(filename, 'rb') as f:
+            tmp_dict = pickle.loads(f)
+        if tmp_dict is not None:
+            self.__dict__ = tmp_dict
 
-    @abstractmethod
-    def export(self):
-        """Store a feature extractor into a binary file"""
-        pass
+    def export(self, filename):
+        """Store a model into a binary file"""
+        with open(filename, 'wb') as f:
+            pickle.dump(self.__dict__, f)
 
-    def extract_targets(self, text, senses):
-        """
-        Takes plain text and
-        dict of ambiguous words to look for
-        as arguments
-        """
-        words = word_tokenize(text)
-        for i, w in enumerate(words):
-            if w in senses.keys():
-                self.targets.append((i, w))
-
-    @abstractmethod
-    def extract_features(self, text, senses):
-        pass

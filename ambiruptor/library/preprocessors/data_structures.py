@@ -9,7 +9,7 @@ class TrainData:
 
 
 class AmbiguousData:
-    def __init__(self, raw_text, targets, data):
-        self.raw_text = raw_text
+    def __init__(self, words, targets, data):
+        self.words = words
         self.targets = targets
         self.data = data

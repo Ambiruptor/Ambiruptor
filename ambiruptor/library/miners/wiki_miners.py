@@ -2,10 +2,12 @@ import sqlite3
 import hashlib
 import xml.sax
 import re
+from nltk import word_tokenize
 
 from ambiruptor.base.core import Miner
 
 class Wikipedia :
+    """Class to manipulate wikipedia data (english)"""
 
     def normalize_title(title) :
         if type(title) not in [ bytes, str ] :
@@ -18,12 +20,15 @@ class Wikipedia :
     def get_links(text) :
         regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
         return regex.findall(text)
+    
+    def format_corpus(data) :
+        return data
+            
 
 class DataMining(Miner):
-    """Abstract class for data mining"""
+    """Data mining with a wikidump file"""
 
     def __init__(self):
-        """Init"""
         self.wikidump_filename = None
         self.database_filename = None
     
@@ -125,7 +130,6 @@ class DataMining(Miner):
         
 
     def get_corpus(self, word):
-        """Get the corpus"""
         conn = sqlite3.connect(self.database_filename)
         
         req = """SELECT id_to FROM links WHERE id_from='%s'"""
@@ -136,9 +140,9 @@ class DataMining(Miner):
         param = "{}".format(tuple(senses_ids))
         corpus_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
         
-        req = """SELECT * FROM articles WHERE id IN %s"""
+        req = """SELECT text FROM articles WHERE id IN %s"""
         param = "{}".format(tuple(corpus_ids))
         corpus = [ x[0] for x in conn.execute(req % param).fetchall()]
         
         conn.close()
-        return corpus
+        return Wikipedia.format_corpus(corpus)
