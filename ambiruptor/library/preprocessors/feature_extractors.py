@@ -1,11 +1,89 @@
 import random
 import numpy as np
-from nltk import word_tokenize
-
 from ambiruptor.base.core import FeatureExtractor
-from ambiruptor.library.preprocessors.data_structures import AmbiguousData
+from ambiruptor.library.preprocessors.tokenizers import word_tokenize
+from ambiruptor.library.preprocessors.data_structures \
+    import AmbiguousData, TrainData
 
+class AmbiguousExtraction(object):
 
+    def __init__(self):
+        """Init the feature extractor"""
+        self.features = []
+    
+    def add_feature(self, f):
+        """Add one feature"""
+        if not isinstance(f, FeatureExtractor):
+            raise TypeError("An instance of FeatureExtractor was expected")
+        self.features.append(f)
+
+    def extract_features(self, text, ambiguous_word):
+        """Extract a feature vector"""
+        
+        # Tokenize the text
+        words = np.array(word_tokenize(text))
+        
+        # Extract targets
+        targets = []
+        for i in range(0, len(words)):
+            if words[i] == ambiguous_word:
+                targets.append(i)
+        
+        # Extract features
+        tmp_data = []
+        for f in self.features:
+            tmp = f.extract_features(words, targets)
+            assert isinstance(tmp, np.ndarray)
+            assert tmp.shape[0] == len(targets)
+            tmp_data.append(tmp)
+        data = np.concatenate(tmp_data, axis=1)
+        
+        # Return an AmbiguousData object
+        return AmbiguousData(data, words, targets)
+
+class CorpusExtraction(object):
+    
+    def __init__(self):
+        """Init the feature extractor"""
+        self.features = []
+    
+    def add_feature(self, f):
+        """Add one feature"""
+        if not isinstance(f, FeatureExtractor):
+            raise TypeError("An instance of FeatureExtractor was expected")
+        self.features.append(f)
+    
+    def extract_features(self, corpora):
+        """Extract a feature vector"""
+        senses = []
+        res_data = []
+        
+        for corpus in corpora :
+            # Tokenize the text and extract targets
+            words = []
+            targets = []
+            for x in corpus :
+                if type(x) is tuple :
+                    targets.append(len(words))
+                    senses.append(x[1])
+                    words.append(x[0])
+                else :
+                    words.extend(word_tokenize(x))
+            words = np.array(words)
+            
+            # Extract features
+            tmp_data = []
+            for f in self.features:
+                tmp = f.extract_features(words, targets)
+                assert isinstance(tmp, np.ndarray)
+                assert tmp.shape[0] == len(targets)
+                tmp_data.append(tmp)
+            res_data.append(np.concatenate(tmp_data, axis=1))
+        
+        # Return an TrainData object
+        return TrainData(np.concatenate(res_data, axis=0), senses)
+        
+    
 class DummyFeatureExtractor(FeatureExtractor):
     """
     Static attribute that for every
@@ -16,9 +94,6 @@ class DummyFeatureExtractor(FeatureExtractor):
                      "feature2",
                      "feature3",
                      "feature4"]
-
-    def __init__(self):
-        self.targets = list()
 
     # these functions are totally dummy-functions for test
     def get_feature1(self):
@@ -33,30 +108,12 @@ class DummyFeatureExtractor(FeatureExtractor):
     def get_feature4(self):
         return random.uniform(1.0, 5.0)
 
-    def extract_targets(self, text, senses):
-        """
-        Takes plain text and
-        dict of ambiguous words to look for
-        as arguments
-        """
-        words = word_tokenize(text)
-        for i, w in enumerate(words):
-            if w in senses.keys():
-                self.targets.append((i, w))
-
-    def extract_features(self, text, senses):
-        """
-        """
-        # We extract targets words for disambiguation
-        self.extract_targets(text, senses)
-        # We extract features for the target words
-        targets = self.targets
-        data = np.zeros((len(self.targets), len(self.feature_names)))
-        # here we prepopulate features with dummy data
-        for t, target in enumerate(self.targets):
+    def extract_features(self, words, targets):
+        data = np.zeros((len(targets), len(self.feature_names)))
+        for t, target in enumerate(targets):
             for i, name in enumerate(DummyFeatureExtractor.feature_names):
-                data[t, i] = getattr(self, "get_%s" % (name))()
-        return AmbiguousData(text, targets, data)
+                data[t,i] = getattr(self, "get_%s" % (name))()
+        return data
 
 
 class CloseWordsFeatureExtractor(FeatureExtractor):

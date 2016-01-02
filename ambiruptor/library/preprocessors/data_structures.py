@@ -1,15 +1,23 @@
+import numpy as np
 
 class TrainData:
-    def __init__(self, word, senses, x=None, labels=None):
-        # TODO: check input data consistency
-        self.word = word
+    def __init__(self, data, senses):
+        assert isinstance(data, np.ndarray)
+        assert isinstance(senses, list)
+        assert data.shape[0] == len(senses)
+        assert len(data.shape) == 2
+        self.data = data
         self.senses = senses
-        self.X = x
-        self.labels = labels
 
 
 class AmbiguousData:
-    def __init__(self, raw_text, targets, data):
-        self.raw_text = raw_text
-        self.targets = targets
+    def __init__(self, data, words, targets):
+        assert isinstance(data, np.ndarray)
+        assert isinstance(words, np.ndarray)
+        assert isinstance(targets, list)
+        assert data.shape[0] == len(targets)
+        assert len(words.shape) == 1
+        assert len(data.shape) == 2
         self.data = data
+        self.words = words
+        self.targets = targets

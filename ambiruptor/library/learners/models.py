@@ -29,16 +29,11 @@ class LinearSVMClassifier(Learner):
                        OneVsRestClassifier(LinearSVC()))
             })
         # Here maybe preprocessor of the labels etc
-            self.models[word][1].fit(train_data.X[word],
+            self.models[word][1].fit(train_data.x[word],
                                      train_data.labels[word])
         return
 
     def predict(self, data):
-        """
-        Guess the best sense for a features vector
-        @param(vector) : features vector
-        @return : word sense
-        """
         result = np.zeros((len(data.targets)), dtype=object)
         for word in self.models:
             local_indices = np.array([i for i, target in enumerate(data.targets) if target[1] == word])
@@ -46,17 +41,3 @@ class LinearSVMClassifier(Learner):
                 data.data[local_indices, ])
         # preprocess labels somehow
         return result
-
-    def load(self, filename):
-        """Load a model from a binary file"""
-        with open(filename, 'rb') as f:
-            tmp_dict = pickle.loads(f)
-        if tmp_dict is not None:
-            self.__dict__.update(tmp_dict)
-        return
-
-    def dump(self, filename):
-        """Store a model into a binary file"""
-        with open(filename, 'w') as f:
-            pickle.dump(self.__dict__, f)
-        return
