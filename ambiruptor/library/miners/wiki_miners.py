@@ -1,14 +1,13 @@
 import sqlite3
-import hashlib
 import xml.sax
 import re
-from nltk import word_tokenize
 
 from ambiruptor.base.core import Miner
 
 class Wikipedia :
     """Class to manipulate wikipedia data (english)"""
-
+    
+    @staticmethod
     def normalize_title(title) :
         if type(title) not in [ bytes, str ] :
             raise TypeError("bytes or str expected")
@@ -17,12 +16,31 @@ class Wikipedia :
         # TODO : Wikipedia naming conventions...
         return title.replace(" ", "_")
     
+    @staticmethod
     def get_links(text) :
-        regex = re.compile("\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
+        regex = re.compile(r"\[\[([^\[\]|:#]*)(?:\|[^\[\]|]*)?\]\]")
         return regex.findall(text)
     
-    def format_corpus(data) :
-        return data
+    @staticmethod
+    def format_corpus(data, senses) :
+        spliter = re.compile(r"(\[\[[^\[\]|:#]*\|[^\[\]|]*\]\])")
+        matcher = re.compile(r"\[\[([^\[\]|:#]*)\|([^\[\]|]*)\]\]")
+        result = []
+        for d in data :
+            res = []
+            for x in spliter.split(d) :
+                link = matcher.match(x)
+                if link is None :
+                    res.append(x)
+                else :
+                    label = link.group(2)
+                    sense = Wikipedia.normalize_title(link.group(1))
+                    if sense in senses :
+                        res.append((label, sense))
+                    else :
+                        res.append(x)
+            result.append(res)
+        return result
             
 
 class DataMining(Miner):
@@ -96,7 +114,7 @@ class DataMining(Miner):
             def endElement(self, name):
                 if name in ["title", "text", "ns"] :
                     self.data[name] = "".join(self.content)
-                if name == "page":
+                if name == "page" and self.data["ns"] == "0":
                     req = """INSERT INTO articles VALUES (?,?,?)"""
                     param = (Wikipedia.normalize_title(self.data["title"]),
                              self.data["text"],
@@ -134,15 +152,15 @@ class DataMining(Miner):
         
         req = """SELECT id_to FROM links WHERE id_from='%s'"""
         param = str(word)
-        senses_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
+        senses_ids = { x[0] for x in conn.execute(req % param).fetchall()}
         
         req = """SELECT id_from FROM links WHERE id_to IN %s"""
         param = "{}".format(tuple(senses_ids))
-        corpus_ids = [ x[0] for x in conn.execute(req % param).fetchall()]
+        corpus_ids = { x[0] for x in conn.execute(req % param).fetchall()}
         
         req = """SELECT text FROM articles WHERE id IN %s"""
         param = "{}".format(tuple(corpus_ids))
         corpus = [ x[0] for x in conn.execute(req % param).fetchall()]
-        
+        print(senses_ids)
         conn.close()
-        return Wikipedia.format_corpus(corpus)
+        return Wikipedia.format_corpus(corpus, senses_ids)

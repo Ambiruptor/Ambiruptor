@@ -29,7 +29,7 @@ class LinearSVMClassifier(Learner):
                        OneVsRestClassifier(LinearSVC()))
             })
         # Here maybe preprocessor of the labels etc
-            self.models[word][1].fit(train_data.X[word],
+            self.models[word][1].fit(train_data.x[word],
                                      train_data.labels[word])
         return
 

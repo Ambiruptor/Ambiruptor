@@ -1,9 +1,9 @@
 import random
 import numpy as np
-from nltk import word_tokenize
-
 from ambiruptor.base.core import FeatureExtractor
-from ambiruptor.library.preprocessors.data_structures import AmbiguousData
+from ambiruptor.library.preprocessors.tokenizers import word_tokenize
+from ambiruptor.library.preprocessors.data_structures \
+    import AmbiguousData, TrainData
 
 class AmbiguousExtraction(object):
 
@@ -26,7 +26,7 @@ class AmbiguousExtraction(object):
         # Extract targets
         targets = []
         for i in range(0, len(words)):
-            if words[i]  == ambiguous_word:
+            if words[i] == ambiguous_word:
                 targets.append(i)
         
         # Extract features
@@ -39,8 +39,51 @@ class AmbiguousExtraction(object):
         data = np.concatenate(tmp_data, axis=1)
         
         # Return an AmbiguousData object
-        return AmbiguousData(words, targets, data)
+        return AmbiguousData(data, words, targets)
 
+class CorpusExtraction(object):
+    
+    def __init__(self):
+        """Init the feature extractor"""
+        self.features = []
+    
+    def add_feature(self, f):
+        """Add one feature"""
+        if not isinstance(f, FeatureExtractor):
+            raise TypeError("An instance of FeatureExtractor was expected")
+        self.features.append(f)
+    
+    def extract_features(self, corpora):
+        """Extract a feature vector"""
+        senses = []
+        res_data = []
+        
+        for corpus in corpora :
+            # Tokenize the text and extract targets
+            words = []
+            targets = []
+            for x in corpus :
+                if type(x) is tuple :
+                    targets.append(len(words))
+                    senses.append(x[1])
+                    words.append(x[0])
+                else :
+                    words.extend(word_tokenize(x))
+            words = np.array(words)
+            
+            # Extract features
+            tmp_data = []
+            for f in self.features:
+                tmp = f.extract_features(words, targets)
+                assert isinstance(tmp, np.ndarray)
+                assert tmp.shape[0] == len(targets)
+                tmp_data.append(tmp)
+            res_data.append(np.concatenate(tmp_data, axis=1))
+        
+        # Return an TrainData object
+        return TrainData(np.concatenate(res_data, axis=0), senses)
+        
+    
 class DummyFeatureExtractor(FeatureExtractor):
     """
     Static attribute that for every
