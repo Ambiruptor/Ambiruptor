@@ -48,6 +48,6 @@ if __name__ == '__main__':
     # Learning model
     print("************************* Learning model **************************")
     model = LinearSVMClassifier()
-    #model.train(train_data)
-    #labels = model.predict(ambiguous_data)
-    #print(labels)
+    model.train(train_data)
+    labels = model.predict(ambiguous_data)
+    print(labels)
