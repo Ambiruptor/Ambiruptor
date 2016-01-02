@@ -50,13 +50,23 @@ git clone git@github.com:Ambiruptor/Ambiruptor.git
 ```
 Then just use the **Makefile** to download / compile the basics needed files.
 
-*TODO : ```nltk.download()```*
+If you have an error when running the tool for the first time, try to download the nltk data.
+```bash
+python
+nltk.download()
+```
 
 ## Run tests
 
 ```
 python tests/test.py
 ```
+
+## Known issues
+
+* When you launch the wiki mining tool on the entire wikipedia file, make sure you have enough space in your ```tmp``` directory.
+Indeed, **sqlite3** will use temporary files to build the database. It can be fixed by changing the default ```tmp``` directory.
+Example, with a debian-like OS and an external hard-drive: ```export TMPDIR=/media/usb/tmp```
 
 ## License
 
