@@ -20,14 +20,22 @@ if __name__ == '__main__':
     data.set_database_filename("data/wikidump.db")
     data.build()
     corpus = data.get_corpus("Bar")
+    print("Size of the corpus:", len(corpus), "articles")
+    print("Done,", time.time() - t, "s")
+    
+    # Building features
+    print("********************** Building features **************************")
+    feature1 = fe.DummyFeatureExtractor()
+    feature2 = fe.DummyFeatureExtractor()
+    t = time.time()
     print("Done,", time.time() - t, "s")
     
     # Feature extraction (corpus)
     print("******************* Feature extraction (corpus) *******************")
     t = time.time()
     corpus_extractor = fe.CorpusExtraction()
-    corpus_extractor.add_feature(fe.DummyFeatureExtractor())
-    corpus_extractor.add_feature(fe.DummyFeatureExtractor())
+    corpus_extractor.add_feature(feature1)
+    corpus_extractor.add_feature(feature2)
     train_data = corpus_extractor.extract_features(corpus)
     print(train_data.data.shape)
     print("Done,", time.time() - t, "s")
@@ -36,8 +44,8 @@ if __name__ == '__main__':
     print("************** Feature extraction (ambiguous text) ****************")
     t = time.time()
     ambiguous_extractor = fe.AmbiguousExtraction()
-    ambiguous_extractor.add_feature(fe.DummyFeatureExtractor())
-    ambiguous_extractor.add_feature(fe.DummyFeatureExtractor())
+    ambiguous_extractor.add_feature(feature1)
+    ambiguous_extractor.add_feature(feature2)
     
     text = """Lorem flower ipsum dolor sit amet, bar food
      consectetur adipiscing elit, sed do thething eiusmod

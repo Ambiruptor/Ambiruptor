@@ -23,8 +23,8 @@ class Wikipedia :
     
     @staticmethod
     def format_corpus(data, senses) :
-        spliter = re.compile(r"(\[\[[^\[\]|:#]*\|[^\[\]|]*\]\])")
-        matcher = re.compile(r"\[\[([^\[\]|:#]*)\|([^\[\]|]*)\]\]")
+        spliter = re.compile(r"(\[\[[^\[\]|:#]*(?:\|[^\[\]|]*)?\]\])")
+        matcher = re.compile(r"\[\[([^\[\]|:#]*)(?:\|([^\[\]|]*))?\]\]")
         result = []
         for d in data :
             res = []
@@ -35,6 +35,8 @@ class Wikipedia :
                 else :
                     label = link.group(2)
                     sense = Wikipedia.normalize_title(link.group(1))
+                    if label is None :
+                        label = link.group(1)
                     if sense in senses :
                         res.append((label, sense))
                     else :
@@ -157,10 +159,10 @@ class DataMining(Miner):
         req = """SELECT id_from FROM links WHERE id_to IN %s"""
         param = "{}".format(tuple(senses_ids))
         corpus_ids = { x[0] for x in conn.execute(req % param).fetchall()}
+        corpus_ids.remove(word)
         
         req = """SELECT text FROM articles WHERE id IN %s"""
         param = "{}".format(tuple(corpus_ids))
         corpus = [ x[0] for x in conn.execute(req % param).fetchall()]
-        print(senses_ids)
         conn.close()
         return Wikipedia.format_corpus(corpus, senses_ids)
