@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import os.path
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 from ambiruptor.library.preprocessors.data_structures \
@@ -122,14 +123,21 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     of usual words in the text
     '''
 
-    size=15
-    '''size of the feature vector we build'''
-
-    def __init__(self, word):
+    def __init__(self):
         """ Initialize the feature extractor."""
-        self.targets=list()
+        size=15
 
+    def set_language(self, lang)
+        if lang != "english" :
+            raise NotImplementedError
+        self.lang = lang
 
+    def set_export_filename(self, filename)
+        self.filename = filename
+    
+    def get_filename(self, word)
+        return self.filename + word + ".data"
+    
     def build_typicalwords(self, word) :
         """
         Build the feature extractor with the ambiguous word
@@ -148,7 +156,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
             sent=sent.replace(", ", " ").replace('=', '').split()
             if word in sent :
                 for other_word in sent :
-                    if other_word.lower() not in stopwords.words("english") and other_word!='' :
+                    if other_word.lower() not in stopwords.words(self.lang) and other_word!='' :
                         words_same_sentence.append(stemmer.stem(other_word.lower()))
         #count the occurence of each other word that appear in the same sentence
         words_same_sentence_occ=[]
@@ -159,27 +167,22 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         words_same_sentence_occ.sort(key=lambda x: -x[1])
 
         #export the first size words
-        f=open(".../corpus/close_words/"+target+".data", "wb")
-        pickle.dump([x[0] for x in words_same_sentence_occ], f)
-        f.close
+        with open(self.get_filename(word), "wb") as f :
+            pickle.dump([x[0] for x in words_same_sentence_occ], f)
 
-    def extract_features(self, text, senses):
-        self.extract_targets(text, senses)
-        data=np.zeroes((len(self.targets), size))
+    def extract_features(self, words, targets):
+        data=np.zeroes((len(targets), size))
         for t, target in enumerate(self.targets):
             #load the list of usual words
-            try :
-                f=open(".../corpus/close_words/"+target+".data", "rb")
-            except FileNotFoundError :
+            if not os.path.isfile(self.get_filename(target)) :
                 self.build_typicalwords(target, size)
-                f=open(".../corpus/close_words/"+target+".data", "rb")
-            usual_words_for_target=pickle.load(f)
-            f.close()
-
-            sep=[stemmer.stem(w.lower()) for w in word_tokenize(text)]
+            with open(self.get_filename(target), "rb") as f :
+                usual_words_for_target=pickle.load(f)
+            
+            sep=[stemmer.stem(w.lower()) for w in words]
             data[t]=[sep.count(typical_word) for typical_word in typical_words[:size]]
 
-        return AmbiguousData(text, targets, data)
+        return data
 
 
 class CollocationsFeatureExtractor(FeatureExtractor):
@@ -243,4 +246,4 @@ class CollocationsFeatureExtractor(FeatureExtractor):
 
             data[t]=[text.count(col) for col in collocations_for_target[:size]]
 
-        return AmbiguousData(text, targets, data)
+        data
