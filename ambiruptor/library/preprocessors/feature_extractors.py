@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import os.path
+from nltk import pos_tag
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 from ambiruptor.library.preprocessors.data_structures \
@@ -116,6 +117,37 @@ class DummyFeatureExtractor(FeatureExtractor):
                 data[t,i] = getattr(self, "get_%s" % (name))()
         return data
 
+class PartOfSpeechFeatureExtractor(FeatureExtractor):
+    
+    def __init__(self):
+        self.window_size = 10
+    
+    def set_window_size(self, s):
+        self.window_size = s
+    
+    pos_list = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS',
+                'LS', 'MD', 'NN', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$',
+                'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD',
+                'VBG',  'VBN', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
+    pos_to_int = dict(zip(pos_list, range(0, len(pos_list))))
+    
+    def extract_features(self, words, targets):
+        data = np.zeros((len(targets), 2*self.window_size+1))
+        for t, target in enumerate(targets):
+            window_begin = max(0,target-self.window_size)
+            window_end = target+self.window_size+1
+            pos = np.array(pos_tag(words[window_begin:window_end]))
+            for i in range(0,2*self.window_size+1):
+                j = i + target - self.window_size
+                if j < 0 or j >= len(words) :
+                    data[t,i] = -1
+                else:
+                    k = i - max(0, self.window_size - target)
+                    if pos[k][1] in self.pos_to_int:
+                        data[t,i] = self.pos_to_int[pos[k][1]]
+                    else:
+                        data[t,i] = 0
+        return data
 
 class CloseWordsFeatureExtractor(FeatureExtractor):
     '''
@@ -127,15 +159,15 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         """ Initialize the feature extractor."""
         size=15
 
-    def set_language(self, lang)
-        if lang != "english" :
+    def set_language(self, lang):
+        if lang != "english":
             raise NotImplementedError
         self.lang = lang
 
-    def set_export_filename(self, filename)
+    def set_export_filename(self, filename):
         self.filename = filename
     
-    def get_filename(self, word)
+    def get_filename(self, word):
         return self.filename + word + ".data"
     
     def build_typicalwords(self, word) :
@@ -152,7 +184,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         sentences=corpus_text.replace("!", ".").replace("?", ".").split('. ')
         words_same_sentence=[]
         #fill the list of words
-        for sent in sentences :
+        for sent in sentences:
             sent=sent.replace(", ", " ").replace('=', '').split()
             if word in sent :
                 for other_word in sent :
@@ -160,7 +192,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                         words_same_sentence.append(stemmer.stem(other_word.lower()))
         #count the occurence of each other word that appear in the same sentence
         words_same_sentence_occ=[]
-        for w in set(words_same_sentence)-{word} :
+        for w in set(words_same_sentence)-{word}:
             words_same_sentence_occ.append((w, words_same_sentence.count(w)))
 
         #sort by decreasing order of count

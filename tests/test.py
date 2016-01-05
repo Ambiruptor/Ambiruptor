@@ -25,8 +25,7 @@ if __name__ == '__main__':
     
     # Building features
     print("********************** Building features **************************")
-    feature1 = fe.DummyFeatureExtractor()
-    feature2 = fe.DummyFeatureExtractor()
+    feature1 = fe.PartOfSpeechFeatureExtractor()
     t = time.time()
     print("Done,", time.time() - t, "s")
     
@@ -35,7 +34,6 @@ if __name__ == '__main__':
     t = time.time()
     corpus_extractor = fe.CorpusExtraction()
     corpus_extractor.add_feature(feature1)
-    corpus_extractor.add_feature(feature2)
     train_data = corpus_extractor.extract_features(corpus)
     print(train_data.data.shape)
     print("Done,", time.time() - t, "s")
@@ -45,17 +43,16 @@ if __name__ == '__main__':
     t = time.time()
     ambiguous_extractor = fe.AmbiguousExtraction()
     ambiguous_extractor.add_feature(feature1)
-    ambiguous_extractor.add_feature(feature2)
     
-    text = """Lorem flower ipsum dolor sit amet, bar food
-     consectetur adipiscing elit, sed do thething eiusmod
-     tempor incididunt ut labore et dolore magna aliqua. Ut enim
-     ad food minim veniam, flower quis nostrud exercitation ullamco
-     laboris nisi ut aliquip food ex ea commodo consequat. Duis aute
-     irure dolor in food reprehenderit flower in voluptate velit esse
-     cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-     food cupidatat non food proident thething, sunt in culpa qui thething
-     officia flower deserunt mollit anim bar id est laborum"""
+    text = """The bar of a mature tropical cyclone is a very dark gray-black
+              layer of cloud appearing near the horizon as seen from an observer
+              preceding the approach of the storm, and is composed of dense
+              stratocumulus clouds. Cumulus and cumulonimbus clouds bearing
+              precipitation follow immediately after the passage of the
+              wall-like bar. Altostratus, cirrostratus and cirrus clouds are
+              usually visible in ascending order above the top of the bar, while
+              the wind direction for an observer facing toward the bar is
+              typically from the left and slightly behind the observer."""
     
     ambiguous_data = ambiguous_extractor.extract_features(text, "bar")
     print(ambiguous_data.data.shape)
