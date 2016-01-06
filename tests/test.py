@@ -25,8 +25,8 @@ if __name__ == '__main__':
     
     # Building features
     print("********************** Building features **************************")
-    feature1 = fe.PartOfSpeechFeatureExtractor()
     t = time.time()
+    feature1 = fe.PartOfSpeechFeatureExtractor()
     print("Done,", time.time() - t, "s")
     
     # Feature extraction (corpus)
