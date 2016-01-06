@@ -9,6 +9,7 @@ class Wikipedia :
     
     @staticmethod
     def normalize_title(title) :
+        """Normalize the title of the articles"""
         if type(title) not in [ bytes, str ] :
             raise TypeError("bytes or str expected")
         if type(title) == bytes :
@@ -18,11 +19,14 @@ class Wikipedia :
     
     @staticmethod
     def get_links(text) :
+        """Get a list of the link in the article"""
         regex = re.compile(r"\[\[([^\[\]|:#]*)(?:\|[^\[\]|]*)?\]\]")
         return regex.findall(text)
     
     @staticmethod
     def format_corpus(data, senses) :
+        """Format the corpus in a shape that could
+        be analysed by the feature extractor"""
         spliter = re.compile(r"(\[\[[^\[\]|:#]*(?:\|[^\[\]|]*)?\]\])")
         matcher = re.compile(r"\[\[([^\[\]|:#]*)(?:\|([^\[\]|]*))?\]\]")
         result = []
@@ -136,6 +140,7 @@ class DataMining(Miner):
         xml.sax.parse(self.wikidump_filename, handler)
         print("Indexes...")
         
+        # Indexes are created after having inserted the values (more efficient)
         req = """CREATE INDEX index_articles ON articles(id)"""
         conn.execute(req)
         

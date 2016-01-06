@@ -22,3 +22,6 @@ class LinearSVMClassifier(Learner):
 
     def predict(self, ambiguous_data):
         return self.model.predict(ambiguous_data.data)
+
+
+# TODO : New models...

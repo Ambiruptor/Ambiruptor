@@ -118,6 +118,7 @@ class DummyFeatureExtractor(FeatureExtractor):
         return data
 
 class PartOfSpeechFeatureExtractor(FeatureExtractor):
+    """Extract the part of speech of the words in a window around the target"""
     
     def __init__(self):
         self.window_size = 10
@@ -125,6 +126,7 @@ class PartOfSpeechFeatureExtractor(FeatureExtractor):
     def set_window_size(self, s):
         self.window_size = s
     
+    # List of possible values for the function pos_tag
     pos_list = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS',
                 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$',
                 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD',
@@ -154,7 +156,9 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     Extracts a vector for the count
     of usual words in the text
     '''
-
+    
+    # TODO: Rewrite this module according to the new design
+    
     def __init__(self):
         """ Initialize the feature extractor."""
         size=15
@@ -179,7 +183,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
 
         corpus_text='I am a happy corpus of bar text that contains a lot of different occurences of the word word! Hopefully these occurences use the word in all different meanings. I hope I did not bore you with this little paragraph!'
 
-        stemmer = PorterStemmer()
+        stemmer = PorterStemmer() # Carefull... Only in english :/
 
         sentences=corpus_text.replace("!", ".").replace("?", ".").split('. ')
         words_same_sentence=[]
@@ -223,6 +227,8 @@ class CollocationsFeatureExtractor(FeatureExtractor):
     of collocations in the text
     '''
 
+    # TODO: Rewrite this module according to the new design
+    
     size=15
     '''size of the feature vector we build'''
 
@@ -259,7 +265,7 @@ class CollocationsFeatureExtractor(FeatureExtractor):
         all_collocs_occ.sort(key=lambda x: -(x[1]*len(x[0])))
 
         #export the first size collocations
-        f=open('.../corpus/collocations/'+word+'.data', 'wb')
+        f=open('.../corpus/collocations/'+word+'.data', 'wb') # TODO
         pickle.dump([col[0] for col in all_collocs_occ])
         f.close()
 
@@ -269,10 +275,10 @@ class CollocationsFeatureExtractor(FeatureExtractor):
         for t, target in enumerate(self.targets):
             #load the list of collocations
             try :
-                f=open(".../corpus/collocations/"+target+".data", "rb")
+                f=open(".../corpus/collocations/"+target+".data", "rb") # TODO
             except FileNotFoundError :
                 self.build_typicalwords(target, size)
-                f=open(".../corpus/collocations/"+target+".data", "rb")
+                f=open(".../corpus/collocations/"+target+".data", "rb") # TODO
             collocations_for_target=pickle.load(f)
             f.close()
 
