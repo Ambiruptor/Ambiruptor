@@ -11,7 +11,6 @@ import ambiruptor.library.preprocessors.feature_extractors as fe
 
 if __name__ == '__main__':
 
-    
     # Data Mining
     print("************************** Data mining ****************************")
     t = time.time()
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     corpus_extractor = fe.CorpusExtraction()
     corpus_extractor.add_feature(feature1)
     train_data = corpus_extractor.extract_features(corpus)
-    print(train_data.data.shape)
+    print("Shape of the matrix of features:", train_data.data.shape)
     print("Done,", time.time() - t, "s")
     
     # Feature extraction (ambiguous text)
@@ -55,7 +54,7 @@ if __name__ == '__main__':
               typically from the left and slightly behind the observer."""
     
     ambiguous_data = ambiguous_extractor.extract_features(text, "bar")
-    print(ambiguous_data.data.shape)
+    print("Shape of the matrix of features:", ambiguous_data.data.shape)
     print("Done,", time.time() - t, "s")
     
     # Learning model

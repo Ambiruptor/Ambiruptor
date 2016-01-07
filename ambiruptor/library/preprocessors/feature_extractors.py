@@ -60,7 +60,8 @@ class CorpusExtraction(object):
         senses = []
         res_data = []
         
-        for corpus in corpora :
+        for i, corpus in enumerate(corpora) :
+            print("\r(", i, "/", len(corpora), ")", end="", flush=True)
             # Tokenize the text and extract targets
             words = []
             targets = []
@@ -81,6 +82,7 @@ class CorpusExtraction(object):
                 assert tmp.shape[0] == len(targets)
                 tmp_data.append(tmp)
             res_data.append(np.concatenate(tmp_data, axis=1))
+        print("\r" + 20 * " " + "\r", end="", flush=True)
         
         # Return an TrainData object
         return TrainData(np.concatenate(res_data, axis=0), senses)
