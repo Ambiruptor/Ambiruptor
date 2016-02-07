@@ -2,6 +2,7 @@ import random
 import numpy as np
 import os.path
 from nltk import pos_tag
+from nltk.corpus import stopwords
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 from ambiruptor.library.preprocessors.data_structures \
@@ -60,18 +61,18 @@ class CorpusExtraction(object):
         senses = []
         res_data = []
         
-        for i, corpus in enumerate(corpora) :
-            print("\r(", i, "/", len(corpora), ")", end="", flush=True)
+        for n, corpus in enumerate(corpora) :
+            print("\r(", n, "/", len(corpora), ")", end="", flush=True)
             # Tokenize the text and extract targets
             words = []
             targets = []
-            for x in corpus :
+            for i, x in enumerate(corpus) :
                 if type(x) is tuple :
-                    targets.append(len(words))
+                    targets.append(i)
                     senses.append(x[1])
                     words.append(x[0])
                 else :
-                    words.extend(word_tokenize(x))
+                    words.append(x)
             words = np.array(words)
             
             # Extract features
@@ -159,15 +160,13 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     of usual words in the text
     '''
     
-    # TODO: Rewrite this module according to the new design
-    
     def __init__(self):
         """ Initialize the feature extractor."""
-        size=15
+        self.get_score = lambda i,j: 1. if abs(i - j) < 10 else 0.
+        self.lang = "english"
+        self.typicalwords = None
 
     def set_language(self, lang):
-        if lang != "english":
-            raise NotImplementedError
         self.lang = lang
 
     def set_export_filename(self, filename):
@@ -176,50 +175,37 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     def get_filename(self, word):
         return self.filename + word + ".data"
     
-    def build_typicalwords(self, word) :
+    def build_typicalwords(self, corpora) :
         """
         Build the feature extractor with the ambiguous word
         @param(word) : string
         """
-        word=word.lower()
-
-        corpus_text='I am a happy corpus of bar text that contains a lot of different occurences of the word word! Hopefully these occurences use the word in all different meanings. I hope I did not bore you with this little paragraph!'
-
-        stemmer = PorterStemmer() # Carefull... Only in english :/
-
-        sentences=corpus_text.replace("!", ".").replace("?", ".").split('. ')
-        words_same_sentence=[]
-        #fill the list of words
-        for sent in sentences:
-            sent=sent.replace(", ", " ").replace('=', '').split()
-            if word in sent :
-                for other_word in sent :
-                    if other_word.lower() not in stopwords.words(self.lang) and other_word!='' :
-                        words_same_sentence.append(stemmer.stem(other_word.lower()))
-        #count the occurence of each other word that appear in the same sentence
-        words_same_sentence_occ=[]
-        for w in set(words_same_sentence)-{word}:
-            words_same_sentence_occ.append((w, words_same_sentence.count(w)))
-
-        #sort by decreasing order of count
-        words_same_sentence_occ.sort(key=lambda x: -x[1])
-
-        #export the first size words
-        with open(self.get_filename(word), "wb") as f :
-            pickle.dump([x[0] for x in words_same_sentence_occ], f)
+        
+        self.typicalwords = set()
+        for corpus in corpora:
+            for i,x in enumerate(corpus):
+                if type(x) is tuple:
+                    for j,y in enumerate(corpus):
+                        if type(y) is not tuple:
+                            if self.get_score(i, j) > 1e-2:
+                                self.typicalwords.add(y)
+        self.typicalwords.difference_update(set(stopwords.words(self.lang)))
 
     def extract_features(self, words, targets):
-        data=np.zeroes((len(targets), size))
-        for t, target in enumerate(self.targets):
-            #load the list of usual words
-            if not os.path.isfile(self.get_filename(target)) :
-                self.build_typicalwords(target, size)
-            with open(self.get_filename(target), "rb") as f :
-                usual_words_for_target=pickle.load(f)
-            
-            sep=[stemmer.stem(w.lower()) for w in words]
-            data[t]=[sep.count(typical_word) for typical_word in typical_words[:size]]
-
+        # Check whether typical words have been build/load.
+        if self.typicalwords is None:
+            raise Exception("You must call build_typicalwords")
+        
+        data=np.zeros((len(targets), len(self.typicalwords)))
+        
+        for t,target in enumerate(targets):
+            scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
+            for i,w in enumerate(words):
+                if w.lower() in self.typicalwords:
+                    scores[w.lower()] += self.get_score(target,i)
+            for i,w in enumerate(scores):
+                data[t,i] = scores[w]
+        
         return data
 
 

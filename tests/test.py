@@ -18,7 +18,7 @@ if __name__ == '__main__':
     data.set_wikidump_filename("data/wikidump.xml")
     data.set_database_filename("data/wikidump.db")
     data.build()
-    corpus = data.get_corpus("Bar")
+    corpus = data.get_corpus("Bar_(disambiguation)")
     print("Size of the corpus:", len(corpus), "articles")
     print("Done,", time.time() - t, "s")
     
@@ -26,13 +26,15 @@ if __name__ == '__main__':
     print("********************** Building features **************************")
     t = time.time()
     feature1 = fe.PartOfSpeechFeatureExtractor()
+    feature2 = fe.CloseWordsFeatureExtractor()
+    feature2.build_typicalwords(corpus)
     print("Done,", time.time() - t, "s")
     
     # Feature extraction (corpus)
     print("******************* Feature extraction (corpus) *******************")
     t = time.time()
     corpus_extractor = fe.CorpusExtraction()
-    corpus_extractor.add_feature(feature1)
+    corpus_extractor.add_feature(feature2)
     train_data = corpus_extractor.extract_features(corpus)
     print("Shape of the matrix of features:", train_data.data.shape)
     print("Done,", time.time() - t, "s")
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     print("************** Feature extraction (ambiguous text) ****************")
     t = time.time()
     ambiguous_extractor = fe.AmbiguousExtraction()
-    ambiguous_extractor.add_feature(feature1)
+    ambiguous_extractor.add_feature(feature2)
     
     text = """The bar of a mature tropical cyclone is a very dark gray-black
               layer of cloud appearing near the horizon as seen from an observer

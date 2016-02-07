@@ -20,22 +20,23 @@ class Wikipedia :
     @staticmethod
     def get_links(text) :
         """Get a list of the link in the article"""
-        regex = re.compile(r"\[\[([^\[\]|:#]*)(?:\|[^\[\]|]*)?\]\]")
+        regex = re.compile(r"\[\[([^\[\]|]*)(?:\|[^\[\]|]*)?\]\]")
         return regex.findall(text)
     
     @staticmethod
     def format_corpus(data, senses) :
         """Format the corpus in a shape that could
         be analysed by the feature extractor"""
-        spliter = re.compile(r"(\[\[[^\[\]|:#]*(?:\|[^\[\]|]*)?\]\])")
-        matcher = re.compile(r"\[\[([^\[\]|:#]*)(?:\|([^\[\]|]*))?\]\]")
+        spliter = re.compile(r"(\[\[[^\[\]|]*(?:\|[^\[\]|]*)?\]\])")
+        matcher = re.compile(r"\[\[([^\[\]|]*)(?:\|([^\[\]|]*))?\]\]")
+        tokenizer = re.compile(r"\W+", re.UNICODE)
         result = []
         for d in data :
             res = []
             for x in spliter.split(d) :
                 link = matcher.match(x)
                 if link is None :
-                    res.append(x)
+                    res.extend([s for s in tokenizer.split(x) if s is not ""])
                 else :
                     label = link.group(2)
                     sense = Wikipedia.normalize_title(link.group(1))
@@ -44,7 +45,7 @@ class Wikipedia :
                     if sense in senses :
                         res.append((label, sense))
                     else :
-                        res.append(x)
+                        res.append(label)
             result.append(res)
         return result
             
@@ -120,7 +121,7 @@ class DataMining(Miner):
             def endElement(self, name):
                 if name in ["title", "text", "ns"] :
                     self.data[name] = "".join(self.content)
-                if name == "page" and self.data["ns"] == "0":
+                if name == "page":
                     req = """INSERT INTO articles VALUES (?,?,?)"""
                     param = (Wikipedia.normalize_title(self.data["title"]),
                              self.data["text"],
@@ -152,13 +153,22 @@ class DataMining(Miner):
         
         conn.commit()
         conn.close()
+    
+
+    def get_disambiguation_pages(self, lang):
+        # In english...
+        conn = sqlite3.connect(self.database_filename)
         
+        req = """SELECT id FROM articles WHERE id LIKE '%(disambiguation)'"""
+        ids = conn.execute(req).fetchall()
+        conn.close()
+        return ids
 
     def get_corpus(self, word):
         conn = sqlite3.connect(self.database_filename)
         
         req = """SELECT id_to FROM links WHERE id_from='%s'"""
-        param = str(word)
+        param = Wikipedia.normalize_title(word)
         senses_ids = { x[0] for x in conn.execute(req % param).fetchall()}
         
         req = """SELECT id_from FROM links WHERE id_to IN %s"""
