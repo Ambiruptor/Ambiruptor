@@ -15,9 +15,10 @@ def remove_thumbs(text):
 def clean(text):
     wikicode = mwparserfromhell.parse(text)
     raw_text = wikicode.strip_code()
-    print(remove_thumbs(raw_text))
+    return remove_thumbs(raw_text)
 
 
 if __name__ == '__main__':
     wikitext = load_text(sys.argv[1])
     text = clean(wikitext)
+    print(text)
