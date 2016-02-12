@@ -1,0 +1,4 @@
+man
+mans
+Man
+Mans
