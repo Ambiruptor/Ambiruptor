@@ -1,6 +1,7 @@
 import sqlite3
 import xml.sax
 import re
+import mwparserfromhell
 
 from ambiruptor.base.core import Miner
 
@@ -24,6 +25,12 @@ class Wikipedia:
         return regex.findall(text)
 
     @staticmethod
+    def clean_wikitext(text):
+        wikicode = mwparserfromhell.parse(text)
+        raw_text = wikicode.strip_code()
+        return re.sub(".+\|.+", "", raw_text)
+    
+    @staticmethod
     def format_corpus(data, senses):
         """Format the corpus in a shape that could
         be analysed by the feature extractor"""
@@ -36,7 +43,8 @@ class Wikipedia:
             for x in spliter.split(d):
                 link = matcher.match(x)
                 if link is None:
-                    res.extend([s for s in tokenizer.split(x) if s is not ""])
+                    tokens = tokenizer.split(Wikipedia.clean_wikitext(x))
+                    res.extend([t for t in tokens if t is not ""])
                 else:
                     label = link.group(2)
                     sense = Wikipedia.normalize_title(link.group(1))

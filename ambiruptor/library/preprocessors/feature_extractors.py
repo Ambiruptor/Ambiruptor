@@ -180,16 +180,26 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         Build the feature extractor with the ambiguous word
         @param(word) : string
         """
-        
-        self.typicalwords = set()
+        typicalwords = dict()
         for corpus in corpora:
             for i,x in enumerate(corpus):
                 if type(x) is tuple:
+                    if x[1] not in typicalwords:
+                        typicalwords[x[1]] = dict()
                     for j,y in enumerate(corpus):
                         if type(y) is not tuple:
-                            if self.get_score(i, j) > 1e-2:
-                                self.typicalwords.add(y)
-        self.typicalwords.difference_update(set(stopwords.words(self.lang)))
+                            score = self.get_score(i, j)
+                            if y not in typicalwords[x[1]]:
+                                typicalwords[x[1]][y] = 0
+                            typicalwords[x[1]][y] += score
+        self.typicalwords = set()
+        forbidden = set(stopwords.words(self.lang))
+        for sense in typicalwords:
+            words = [x for x in typicalwords[sense] if x not in forbidden]
+            scores = [ -typicalwords[sense][x] for x in words ]
+            bestwords = [ x[1] for x in sorted(zip(scores, words))[:10]]
+            self.typicalwords.update(bestwords)
+        print(self.typicalwords)
 
     def extract_features(self, words, targets):
         # Check whether typical words have been build/load.
