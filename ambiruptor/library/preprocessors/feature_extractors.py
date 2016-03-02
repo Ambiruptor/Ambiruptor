@@ -162,24 +162,21 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     
     def __init__(self):
         """ Initialize the feature extractor."""
-        self.get_score = lambda i,j: 1. if abs(i - j) < 10 else 0.
         self.lang = "english"
         self.typicalwords = None
-
+    
     def set_language(self, lang):
         self.lang = lang
-
-    def set_export_filename(self, filename):
-        self.filename = filename
     
-    def get_filename(self, word):
-        return self.filename + word + ".data"
+    def get_score_function(self):
+        return lambda i,j: 1. if abs(i - j) < 10 else 0.
     
-    def build_typicalwords(self, corpora) :
+    def build_typicalwords(self, corpora):
         """
         Build the feature extractor with the ambiguous word
         @param(word) : string
         """
+        get_score = self.get_score_function()
         typicalwords = dict()
         for corpus in corpora:
             for i,x in enumerate(corpus):
@@ -188,10 +185,11 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                         typicalwords[x[1]] = dict()
                     for j,y in enumerate(corpus):
                         if type(y) is not tuple:
-                            score = self.get_score(i, j)
-                            if y not in typicalwords[x[1]]:
-                                typicalwords[x[1]][y] = 0
-                            typicalwords[x[1]][y] += score
+                            word = y.lower() # TODO : Normalize words ?
+                            score = get_score(i, j)
+                            if word not in typicalwords[x[1]]:
+                                typicalwords[x[1]][word] = 0
+                            typicalwords[x[1]][word] += score
         self.typicalwords = set()
         forbidden = set(stopwords.words(self.lang))
         for sense in typicalwords:
@@ -199,6 +197,8 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
             scores = [ -typicalwords[sense][x] for x in words ]
             bestwords = [ x[1] for x in sorted(zip(scores, words))[:10]]
             self.typicalwords.update(bestwords)
+    
+    def print_typicalwords(self):
         print(self.typicalwords)
 
     def extract_features(self, words, targets):
@@ -206,19 +206,21 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         if self.typicalwords is None:
             raise Exception("You must call build_typicalwords")
         
+        get_score = self.get_score_function()
+        
         data=np.zeros((len(targets), len(self.typicalwords)))
         
         for t,target in enumerate(targets):
             scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
             for i,w in enumerate(words):
                 if w.lower() in self.typicalwords:
-                    scores[w.lower()] += self.get_score(target,i)
+                    scores[w.lower()] += get_score(target,i)
             for i,w in enumerate(scores):
                 data[t,i] = scores[w]
         
         return data
 
-
+"""
 class CollocationsFeatureExtractor(FeatureExtractor):
     '''
     Extracts a vector for the count
@@ -231,7 +233,7 @@ class CollocationsFeatureExtractor(FeatureExtractor):
     '''size of the feature vector we build'''
 
     def __init__(self, word):
-        """ Initialize the feature extractor. """
+        ''' Initialize the feature extractor. '''
         self.targets=list()
 
     def build_collocations(self, word):
@@ -283,3 +285,4 @@ class CollocationsFeatureExtractor(FeatureExtractor):
             data[t]=[text.count(col) for col in collocations_for_target[:size]]
 
         data
+"""

@@ -1,10 +1,12 @@
 all: setup data/wikidump.xml
 
 setup:
+	mkdir -p data/feature_extractors
 	python setup.py install
 
 clean:
 	rm dist build ambiruptor.egg-info -R
+	rm data/feature_extractors/*
 
 realclean: clean
 	rm data -R

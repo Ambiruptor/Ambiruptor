@@ -100,7 +100,7 @@ class Miner(object):
     def load(self, filename):
         """Load a model from a binary file."""
         with open(filename, 'rb') as f:
-            tmp_dict = pickle.loads(f)
+            tmp_dict = pickle.load(f)
         if tmp_dict is not None:
             self.__dict__ = tmp_dict
 
@@ -130,11 +130,12 @@ class FeatureExtractor(object):
     def load(self, filename):
         """Load a model from a binary file."""
         with open(filename, 'rb') as f:
-            tmp_dict = pickle.loads(f)
+            tmp_dict = pickle.load(f)
         if tmp_dict is not None:
             self.__dict__ = tmp_dict
 
     def export(self, filename):
         """Store a model into a binary file."""
+        print(self.__dict__)
         with open(filename, 'wb') as f:
             pickle.dump(self.__dict__, f)

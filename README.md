@@ -39,7 +39,8 @@ source activate ambiruptor
 
 To install required dependencies
 ```
-conda install --file requirements.txt
+conda install pip
+pip install -r requirement.txt
 ```
 
 ## Installation
@@ -49,12 +50,6 @@ In order to install the **Ambiruptor project** you have to clone this repository
 git clone git@github.com:Ambiruptor/Ambiruptor.git
 ```
 Then just use the **Makefile** to download / compile the basics needed files.
-
-If you have an error when running the tool for the first time, try to download the nltk data.
-```bash
-python
-nltk.download()
-```
 
 ## Run tests
 

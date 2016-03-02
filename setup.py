@@ -1,5 +1,10 @@
-from setuptools import setup
+# Downloading dependancies
+import nltk
+nltk.download("stopwords")
+nltk.download("punkt")
 
+# Setup of ambiruptor package
+from setuptools import setup
 setup(name='ambiruptor',
       version='0.1',
       description='Disambiguation tool',
