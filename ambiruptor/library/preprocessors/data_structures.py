@@ -16,7 +16,7 @@ class AmbiguousData:
         assert isinstance(words, np.ndarray)
         assert isinstance(targets, list)
         assert data.shape[0] == len(targets)
-        assert len(words.shape) == 1
+        # assert len(words.shape) == 1
         assert len(data.shape) == 2
         self.data = data
         self.words = words
