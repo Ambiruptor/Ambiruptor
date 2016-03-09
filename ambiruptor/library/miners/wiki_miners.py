@@ -194,7 +194,7 @@ class DataMining(Miner):
         req = """SELECT text FROM articles WHERE id IN (
                     SELECT id_from FROM links WHERE id_to IN (
                         SELECT id_to FROM links WHERE id_from=?
-                    ) AND id_to != ?
+                    ) AND id_from != ?
                  )"""
         corpus = [x[0] for x in conn.execute(req, [word] * 2).fetchall()]
         
