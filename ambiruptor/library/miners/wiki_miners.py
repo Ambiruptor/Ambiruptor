@@ -170,26 +170,36 @@ class DataMining(Miner):
 
         req = """SELECT id FROM articles WHERE id LIKE '%(disambiguation)'"""
         ids = [ x[0] for x in conn.execute(req).fetchall() ]
-        conn.close()
         
-        is_word = re.compile(r"^[a-zA-Z_()]*$")
-        ids = [ w for w in ids if is_word.match(w) is not None]
+        conn.close()
         return ids
 
     def get_corpus(self, word):
+        
+        # Format a set into a string...
+        def get_set(s):
+            t = tuple(s)
+            if len(t) == 0:
+                return "()"
+            elif len(t) == 1:
+                return "({})".format(t[0])
+            else:
+                return "{}".format(t)
+        
         conn = sqlite3.connect(self.database_filename)
 
-        req = """SELECT id_to FROM links WHERE id_from='%s'"""
-        param = Wikipedia.normalize_title(word)
+        req = """SELECT id_to FROM links WHERE id_from=%s"""
+        param = "{!r}".format(Wikipedia.normalize_title(word))
+        print(req % param)
         senses_ids = {x[0] for x in conn.execute(req % param).fetchall()}
 
         req = """SELECT id_from FROM links WHERE id_to IN %s"""
-        param = "{}".format(tuple(senses_ids))
+        param = get_set(senses_ids)
         corpus_ids = {x[0] for x in conn.execute(req % param).fetchall()}
         corpus_ids.remove(word)
 
         req = """SELECT text FROM articles WHERE id IN %s"""
-        param = "{}".format(tuple(corpus_ids))
+        param = get_set(corpus_ids)
         corpus = [x[0] for x in conn.execute(req % param).fetchall()]
         
         conn.close()
