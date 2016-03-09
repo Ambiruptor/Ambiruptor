@@ -188,19 +188,17 @@ class DataMining(Miner):
         
         conn = sqlite3.connect(self.database_filename)
 
-        req = """SELECT id_to FROM links WHERE id_from=%s"""
-        param = "{!r}".format(Wikipedia.normalize_title(word))
-        print(req % param)
-        senses_ids = {x[0] for x in conn.execute(req % param).fetchall()}
+        req = """SELECT id_to FROM links WHERE id_from=?"""
+        senses_ids = {x[0] for x in conn.execute(req, [word]).fetchall()}
 
-        req = """SELECT id_from FROM links WHERE id_to IN %s"""
-        param = get_set(senses_ids)
-        corpus_ids = {x[0] for x in conn.execute(req % param).fetchall()}
+        req = """SELECT id_from FROM links WHERE id_to IN (%s)"""
+        req = req % (",".join(["?"] * len(senses_ids)))
+        corpus_ids = {x[0] for x in conn.execute(req, list(senses_ids)).fetchall()}
         corpus_ids.remove(word)
 
-        req = """SELECT text FROM articles WHERE id IN %s"""
-        param = get_set(corpus_ids)
-        corpus = [x[0] for x in conn.execute(req % param).fetchall()]
+        req = """SELECT text FROM articles WHERE id IN (%s)"""
+        req = req % (",".join(["?"] * len(corpus_ids)))
+        corpus = [x[0] for x in conn.execute(req, list(corpus_ids)).fetchall()]
         
         conn.close()
         return Wikipedia.format_corpus(corpus, senses_ids)
