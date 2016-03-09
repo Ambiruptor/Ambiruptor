@@ -190,15 +190,13 @@ class DataMining(Miner):
 
         req = """SELECT id_to FROM links WHERE id_from=?"""
         senses_ids = {x[0] for x in conn.execute(req, [word]).fetchall()}
-
-        req = """SELECT id_from FROM links WHERE id_to IN (%s)"""
-        req = req % (",".join(["?"] * len(senses_ids)))
-        corpus_ids = {x[0] for x in conn.execute(req, list(senses_ids)).fetchall()}
-        corpus_ids.remove(word)
-
-        req = """SELECT text FROM articles WHERE id IN (%s)"""
-        req = req % (",".join(["?"] * len(corpus_ids)))
-        corpus = [x[0] for x in conn.execute(req, list(corpus_ids)).fetchall()]
+        
+        req = """SELECT text FROM articles WHERE id IN (
+                    SELECT id_from FROM links WHERE id_to IN (
+                        SELECT id_to FROM links WHERE id_from=?
+                    ) AND id_to != ?
+                 )"""
+        corpus = [x[0] for x in conn.execute(req, [word] * 2).fetchall()]
         
         conn.close()
         return Wikipedia.format_corpus(corpus, senses_ids)
