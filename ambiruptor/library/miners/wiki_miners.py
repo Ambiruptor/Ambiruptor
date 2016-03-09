@@ -163,10 +163,13 @@ class DataMining(Miner):
 
     def get_disambiguation_pages(self, lang):
         # In english...
+        if lang not in ["english"]:
+            raise NotImplementedError()
+        
         conn = sqlite3.connect(self.database_filename)
 
         req = """SELECT id FROM articles WHERE id LIKE '%(disambiguation)'"""
-        ids = conn.execute(req).fetchall()
+        ids = [ x[0] for x in conn.execute(req).fetchall() ]
         conn.close()
         return ids
 
