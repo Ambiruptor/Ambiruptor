@@ -171,6 +171,9 @@ class DataMining(Miner):
         req = """SELECT id FROM articles WHERE id LIKE '%(disambiguation)'"""
         ids = [ x[0] for x in conn.execute(req).fetchall() ]
         conn.close()
+        
+        is_word = re.compile(r"^[a-zA-Z_()]*$")
+        ids = [ w for w in ids if is_word.match(w) is not None]
         return ids
 
     def get_corpus(self, word):
@@ -188,5 +191,6 @@ class DataMining(Miner):
         req = """SELECT text FROM articles WHERE id IN %s"""
         param = "{}".format(tuple(corpus_ids))
         corpus = [x[0] for x in conn.execute(req % param).fetchall()]
+        
         conn.close()
         return Wikipedia.format_corpus(corpus, senses_ids)
