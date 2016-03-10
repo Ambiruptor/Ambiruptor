@@ -136,6 +136,5 @@ class FeatureExtractor(object):
 
     def export(self, filename):
         """Store a model into a binary file."""
-        print(self.__dict__)
         with open(filename, 'wb') as f:
             pickle.dump(self.__dict__, f)

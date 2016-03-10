@@ -33,13 +33,13 @@ if __name__ == '__main__':
     t = time.time()
     feature1 = fe.PartOfSpeechFeatureExtractor()
     feature2 = fe.CloseWordsFeatureExtractor()
-    if os.path.isfile("data/feature_extractors/bar.dump"):
+    if os.path.isfile("data/feature_extractors/test.dump"):
         print("Loading feature extractor...")
-        feature2.load("data/feature_extractors/bar.dump")
+        feature2.load("data/feature_extractors/test.dump")
     else:
         print("Building feature extractor...")
         feature2.build_typicalwords(corpus)
-        feature2.export("data/feature_extractors/bar.dump")
+        feature2.export("data/feature_extractors/test.dump")
     feature2.print_typicalwords()
     print("Done,", time.time() - t, "s")
 
