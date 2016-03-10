@@ -27,43 +27,55 @@ def benchmark(models, X, y):
     """
     print("---------------------------------------")
     print("Benchmark for different learning models:\n")
-    scores_timed = []
+    # scores_timed = []
+    cross_val_scores = []
     i = 1
     for name, model in models:
         print("%d) %s: \n" % (i, name))
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.33, random_state=42)
-        train_data = TrainData(X_train, y_train.tolist())
-        t = time.time()
-        model.train(train_data)
-        t = time.time() - t
-        test_data = AmbiguousData(X_test, np.ndarray([0, 0]), y_test.tolist())
-        print("Score: %.2f" % model.score(test_data))
-        print("Training time: %f" % t)
+
+        # Get score by cross-validation
+        score = model.cross_validation(TrainData(X, y.tolist()))
+        print("Cross Validation Score: %.2f" % score.mean())
+        cross_val_scores.append([score.mean(), score.std() * score.std()])
+
+        # Get score by train/test splitting
+        # Maybe we will use it later on out big data not to wait for ages
+
+        # X_train, X_test, y_train, y_test = train_test_split(
+        #     X, y, test_size=0.33, random_state=42)
+        # train_data = TrainData(X_train, y_train.tolist())
+        # t = time.time()
+        # model.train(train_data)
+        # t = time.time() - t
+        # test_data = AmbiguousData(X_test, np.ndarray([0, 0]), y_test.tolist())
+        # # print("Score: %.2f" % model.score(test_data))
+        # print("Training time: %f" % t)
+        # scores_timed.append([model.score(test_data), t])
+
         print("\n")
         i += 1
-        scores_timed.append([model.score(test_data), t])
-    scores_timed = np.array(scores_timed)
+
+    cross_val_scores = np.array(cross_val_scores)
 
     # Plotting part
-    ind = np.arange(scores_timed.shape[0])
+    ind = np.arange(cross_val_scores.shape[0])
     width = 0.35       # the width of the bars
 
     plt.figure(1)
 
     plt.subplot(211)
-    plt.barh(ind, scores_timed[:, 0], width, color='#e93f4b', align='center')
+    plt.barh(ind, cross_val_scores[:, 0], width, color='#e93f4b', align='center')
     plt.title('Classification Scores')
     plt.xlabel('Score')
     plt.yticks(ind, [model[0] for model in models])
     plt.grid(True)
 
     plt.subplot(212)
-    plt.barh(ind + width, scores_timed[:, 1], width, color='#4bdcb0',
+    plt.barh(ind + width, cross_val_scores[:, 1], width, color='#4bdcb0',
              align='center')
     plt.grid(True)
-    plt.title('Train time')
-    plt.xlabel('Time in ms')
+    plt.title('Variance')
+    plt.xlabel('Variance')
     plt.yticks(ind, [model[0] for model in models])
 
     plt.subplots_adjust(left=0.45, right=0.9, top=0.9, bottom=0.1)
