@@ -1,7 +1,10 @@
 """Core base classes"""
 
 from abc import ABCMeta, abstractmethod
+from sklearn import cross_validation
+
 import pickle
+
 
 
 class DocStringInheritor(ABCMeta):
@@ -36,7 +39,7 @@ class Learner(object):
 
     def __init__(self):
         """Init the learning model."""
-        pass
+        model = None
 
     @abstractmethod
     def train(self, train_data):
@@ -76,6 +79,16 @@ class Learner(object):
         """Store a model into a binary file."""
         with open(filename, 'wb') as f:
             pickle.dump(self.__dict__, f)
+
+    def cross_validation(self, train_data, cv=10):
+        """Wrapper of the scikit-learn cross validation function."""
+        scores = cross_validation.cross_val_score(
+            self.model,
+            train_data.data,
+            train_data.senses,
+            cv=cv)
+        return scores
+
 
 
 class Miner(object):
