@@ -11,12 +11,16 @@ print("Done,", time.time() - t, "s")
 
 t = time.time()
 print("============== Building list of ambiguous words ===================")
-#ambiguous_words = data.get_disambiguation_pages("english")
-ambiguous_words = ["Bar_(disambiguation)"]
+filename_ambiguouswords = "data/ambiguous_words.txt"
+with open(filename_ambiguouswords, 'r') as f:
+    ambiguous_words = { x.rstrip() for x in f.readlines() }
+    if "" in ambiguous_words :
+        ambiguous_words.remove("")
+
 nb_ambiguous_words = len(ambiguous_words)
 print("Done,", time.time() - t, "s")
 
-t2 = time.time()
+t = time.time()
 print("======================== Build corpora ============================")
 for n,w in enumerate(ambiguous_words):
     t2 = time.time()

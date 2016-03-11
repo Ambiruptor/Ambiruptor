@@ -165,6 +165,11 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         self.lang = "english"
         self.typicalwords = None
     
+    def normalize_word(self, s):
+        # TODO (Pouloud) : Stemmer
+        # if s is not a valid word (ex: number, ...) return the empty string
+        return s.lower()
+    
     def set_language(self, lang):
         self.lang = lang
     
@@ -185,13 +190,14 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                         typicalwords[x[1]] = dict()
                     for j,y in enumerate(corpus):
                         if type(y) is not tuple:
-                            word = y.lower() # TODO : Normalize words ?
+                            word = self.normalize_word(y)
                             score = get_score(i, j)
                             if word not in typicalwords[x[1]]:
                                 typicalwords[x[1]][word] = 0
                             typicalwords[x[1]][word] += score
         self.typicalwords = set()
         forbidden = set(stopwords.words(self.lang))
+        forbidden.add("")
         for sense in typicalwords:
             words = [x for x in typicalwords[sense] if x not in forbidden]
             scores = [ -typicalwords[sense][x] for x in words ]
