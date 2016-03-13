@@ -3,17 +3,21 @@ import numpy as np
 import os.path
 from nltk import pos_tag
 from nltk.corpus import stopwords
+from nltk.stem.porter import *
+
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 from ambiruptor.library.preprocessors.data_structures \
     import AmbiguousData, TrainData
+
+
 
 class AmbiguousExtraction(object):
 
     def __init__(self):
         """Init the feature extractor"""
         self.features = []
-    
+
     def add_feature(self, f):
         """Add one feature"""
         if not isinstance(f, FeatureExtractor):
@@ -22,16 +26,16 @@ class AmbiguousExtraction(object):
 
     def extract_features(self, text, ambiguous_word):
         """Extract a feature vector"""
-        
+
         # Tokenize the text
         words = np.array(word_tokenize(text))
-        
+
         # Extract targets
         targets = []
         for i in range(0, len(words)):
             if words[i] == ambiguous_word:
                 targets.append(i)
-        
+
         # Extract features
         tmp_data = []
         for f in self.features:
@@ -40,27 +44,27 @@ class AmbiguousExtraction(object):
             assert tmp.shape[0] == len(targets)
             tmp_data.append(tmp)
         data = np.concatenate(tmp_data, axis=1)
-        
+
         # Return an AmbiguousData object
         return AmbiguousData(data, words, targets)
 
 class CorpusExtraction(object):
-    
+
     def __init__(self):
         """Init the feature extractor"""
         self.features = []
-    
+
     def add_feature(self, f):
         """Add one feature"""
         if not isinstance(f, FeatureExtractor):
             raise TypeError("An instance of FeatureExtractor was expected")
         self.features.append(f)
-    
+
     def extract_features(self, corpora):
         """Extract a feature vector"""
         senses = []
         res_data = []
-        
+
         for n, corpus in enumerate(corpora) :
             print("\r(", n, "/", len(corpora), ")", end="", flush=True)
             # Tokenize the text and extract targets
@@ -74,7 +78,7 @@ class CorpusExtraction(object):
                 else :
                     words.append(x)
             words = np.array(words)
-            
+
             # Extract features
             tmp_data = []
             for f in self.features:
@@ -84,11 +88,11 @@ class CorpusExtraction(object):
                 tmp_data.append(tmp)
             res_data.append(np.concatenate(tmp_data, axis=1))
         print("\r" + 20 * " " + "\r", end="", flush=True)
-        
+
         # Return an TrainData object
         return TrainData(np.concatenate(res_data, axis=0), senses)
-        
-    
+
+
 class DummyFeatureExtractor(FeatureExtractor):
     """
     Static attribute that for every
@@ -122,20 +126,20 @@ class DummyFeatureExtractor(FeatureExtractor):
 
 class PartOfSpeechFeatureExtractor(FeatureExtractor):
     """Extract the part of speech of the words in a window around the target"""
-    
+
     def __init__(self):
         self.window_size = 10
-    
+
     def set_window_size(self, s):
         self.window_size = s
-    
+
     # List of possible values for the function pos_tag
     pos_list = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS',
                 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$',
                 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD',
                 'VBG',  'VBN', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
     pos_to_int = dict(zip(pos_list, range(0, len(pos_list))))
-    
+
     def extract_features(self, words, targets):
         data = np.zeros((len(targets), 2*self.window_size+1))
         for t, target in enumerate(targets):
@@ -159,23 +163,22 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
     Extracts a vector for the count
     of usual words in the text
     '''
-    
+
     def __init__(self):
         """ Initialize the feature extractor."""
         self.lang = "english"
         self.typicalwords = None
-    
+
     def normalize_word(self, s):
-        # TODO (Pouloud) : Stemmer
-        # if s is not a valid word (ex: number, ...) return the empty string
-        return s.lower()
-    
+        stemmer = PorterStemmer()
+        return stemmer.stem(s.lower())
+
     def set_language(self, lang):
         self.lang = lang
-    
+
     def get_score_function(self):
         return lambda i,j: 1. if abs(i - j) < 10 else 0.
-    
+
     def build_typicalwords(self, corpora):
         """
         Build the feature extractor with the ambiguous word
@@ -203,7 +206,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
             scores = [ -typicalwords[sense][x] for x in words ]
             bestwords = [ x[1] for x in sorted(zip(scores, words))[:10]]
             self.typicalwords.update(bestwords)
-    
+
     def print_typicalwords(self):
         print(self.typicalwords)
 
@@ -211,11 +214,11 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         # Check whether typical words have been build/load.
         if self.typicalwords is None:
             raise Exception("You must call build_typicalwords")
-        
+
         get_score = self.get_score_function()
-        
+
         data=np.zeros((len(targets), len(self.typicalwords)))
-        
+
         for t,target in enumerate(targets):
             scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
             for i,w in enumerate(words):
@@ -223,7 +226,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                     scores[w.lower()] += get_score(target,i)
             for i,w in enumerate(scores):
                 data[t,i] = scores[w]
-        
+
         return data
 
 """
@@ -234,7 +237,7 @@ class CollocationsFeatureExtractor(FeatureExtractor):
     '''
 
     # TODO: Rewrite this module according to the new design
-    
+
     size=15
     '''size of the feature vector we build'''
 
