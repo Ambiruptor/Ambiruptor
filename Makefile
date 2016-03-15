@@ -8,6 +8,7 @@ setup:
 clean:
 	rm dist build ambiruptor.egg-info -R
 	rm data/corpora/*
+	rm data/feture_extractors/*
 
 WIKIDUMP = http://dumps.wikimedia.org/enwiki/20160204/enwiki-20160204-pages-meta-current1.xml-p000000010p000030303.bz2
 data/wikidump.xml:
