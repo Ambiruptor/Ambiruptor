@@ -4,6 +4,7 @@ import os.path
 from nltk import pos_tag
 from nltk.corpus import stopwords
 from nltk.stem.porter import *
+from nltk.stem import WordNetLemmatizer
 
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
@@ -29,10 +30,12 @@ class AmbiguousExtraction(object):
 
         # Tokenize the text
         words = np.array(word_tokenize(text))
+        wordnet_lemmatizer = WordNetLemmatizer()
 
         # Extract targets
         targets = []
         for i in range(0, len(words)):
+            lemmatized = wordnet_lemmatizer.lemmatize(words[i])
             if words[i] == ambiguous_word:
                 targets.append(i)
 
@@ -65,17 +68,17 @@ class CorpusExtraction(object):
         senses = []
         res_data = []
 
-        for n, corpus in enumerate(corpora) :
+        for n, corpus in enumerate(corpora):
             print("\r(", n, "/", len(corpora), ")", end="", flush=True)
             # Tokenize the text and extract targets
             words = []
             targets = []
-            for i, x in enumerate(corpus) :
-                if type(x) is tuple :
+            for i, x in enumerate(corpus):
+                if type(x) is tuple:
                     targets.append(i)
                     senses.append(x[1])
                     words.append(x[0])
-                else :
+                else:
                     words.append(x)
             words = np.array(words)
 
@@ -187,7 +190,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         get_score = self.get_score_function()
         typicalwords = dict()
         for corpus in corpora:
-            for i,x in enumerate(corpus):
+            for i, x in enumerate(corpus):
                 if type(x) is tuple:
                     if x[1] not in typicalwords:
                         typicalwords[x[1]] = dict()
@@ -217,15 +220,15 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
 
         get_score = self.get_score_function()
 
-        data=np.zeros((len(targets), len(self.typicalwords)))
+        data = np.zeros((len(targets), len(self.typicalwords)))
 
-        for t,target in enumerate(targets):
+        for t, target in enumerate(targets):
             scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
-            for i,w in enumerate(words):
+            for i, w in enumerate(words):
                 if w.lower() in self.typicalwords:
-                    scores[w.lower()] += get_score(target,i)
-            for i,w in enumerate(scores):
-                data[t,i] = scores[w]
+                    scores[w.lower()] += get_score(target, i)
+            for i, w in enumerate(scores):
+                data[t, i] = scores[w]
 
         return data
 
