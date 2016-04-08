@@ -51,11 +51,11 @@ class Learner(object):
         """Provide the interface for scikit-learn utils
         simply calling the train method.
         """
-        return self.tain(train_data)
+        return self.train(train_data)
 
-    def score(self, ambiguous_data):
+    def score(self, train_data):
         """Provide the scoring interface for scikit-learn utils."""
-        return self.model.score(ambiguous_data.data, ambiguous_data.targets)
+        return self.model.score(train_data.data, train_data.senses)
 
     def get_params(self, deep=True):
         """Provide the get_params interface for scikit-learn utils."""

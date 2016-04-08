@@ -3,7 +3,6 @@
 Testing the implemented models with cross-validation
 """
 from ambiruptor.library.preprocessors.data_structures import TrainData
-from ambiruptor.library.preprocessors.data_structures import AmbiguousData
 
 from ambiruptor.library.learners.models import LinearSVMClassifier
 from ambiruptor.library.learners.models import RbfSVMClassifier
@@ -47,7 +46,7 @@ def benchmark(models, X, y):
         # t = time.time()
         # model.train(train_data)
         # t = time.time() - t
-        # test_data = AmbiguousData(X_test, np.ndarray([0, 0]), y_test.tolist())
+        # test_data = TrainData(X_test, y_test.tolist())
         # # print("Score: %.2f" % model.score(test_data))
         # print("Training time: %f" % t)
         # scores_timed.append([model.score(test_data), t])
@@ -107,7 +106,7 @@ if __name__ == '__main__':
         t = time.time()
         model.train(train_data)
         t = time.time() - t
-        test_data = AmbiguousData(X_test, np.ndarray([0, 0]), y_test.tolist())
+        test_data = TrainData(X_test, y_test.tolist())
         scores_timed.append([C, model.score(test_data), t])
 
     scores_timed = np.array(scores_timed)
@@ -131,7 +130,7 @@ if __name__ == '__main__':
             t = time.time()
             model.train(train_data)
             t = time.time() - t
-            test_data = AmbiguousData(X_test, np.ndarray([0, 0]), y_test.tolist())
+            test_data = TrainData(X_test, y_test.tolist())
             scores_timed.append([C, gamma, model.score(test_data), t])
 
     scores_timed = np.array(scores_timed)

@@ -25,8 +25,11 @@ print("======================== Build corpora ============================")
 for n,w in enumerate(ambiguous_words):
     t2 = time.time()
     print("%s (%d/%d)" % (w, n, nb_ambiguous_words))
-    corpus = data.get_corpus(w)
     filename = "data/corpora/" + w + ".dump"
+    if os.path.isfile(filename):
+        print("Already done.")
+        continue
+    corpus = data.get_corpus(w)
     with open(filename, 'wb') as f:
         pickle.dump(corpus, f)
     print("ok (%f s)" % (time.time() - t2))

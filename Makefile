@@ -3,6 +3,8 @@ all: setup data/wikidump.xml
 setup:
 	mkdir -p data/corpora
 	mkdir -p data/feature_extractors
+	mkdir -p data/feature_extractors/closewords
+	mkdir -p data/models
 	python setup.py install
 
 clean:
