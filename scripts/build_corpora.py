@@ -1,4 +1,4 @@
-import time, pickle
+import time, pickle, os.path
 from ambiruptor.library.miners.wiki_miners import DataMining
 
 t = time.time()

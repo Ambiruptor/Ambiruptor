@@ -3,8 +3,7 @@ import numpy as np
 import os.path
 from nltk import pos_tag
 from nltk.corpus import stopwords
-from nltk.stem.porter import *
-from nltk.stem import WordNetLemmatizer
+from nltk.stem.porter import PorterStemmer
 
 from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
@@ -30,12 +29,10 @@ class AmbiguousExtraction(object):
 
         # Tokenize the text
         words = np.array(word_tokenize(text))
-        wordnet_lemmatizer = WordNetLemmatizer()
 
         # Extract targets
         targets = []
         for i in range(0, len(words)):
-            lemmatized = wordnet_lemmatizer.lemmatize(words[i])
             if words[i] == ambiguous_word:
                 targets.append(i)
 
@@ -70,7 +67,7 @@ class CorpusExtraction(object):
 
         for n, corpus in enumerate(corpora):
             print("\r(", n, "/", len(corpora), ")", end="", flush=True)
-            # Tokenize the text and extract targets
+            # Corpus is already tokenized (using word_tokenize)
             words = []
             targets = []
             for i, x in enumerate(corpus):
@@ -171,10 +168,10 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         """ Initialize the feature extractor."""
         self.lang = "english"
         self.typicalwords = None
+        self.stemmer = PorterStemmer()
 
     def normalize_word(self, s):
-        stemmer = PorterStemmer()
-        return stemmer.stem(s.lower())
+        return self.stemmer.stem(s.lower())
 
     def set_language(self, lang):
         self.lang = lang
@@ -194,7 +191,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                 if type(x) is tuple:
                     if x[1] not in typicalwords:
                         typicalwords[x[1]] = dict()
-                    for j,y in enumerate(corpus):
+                    for j, y in enumerate(corpus):
                         if type(y) is not tuple:
                             word = self.normalize_word(y)
                             score = get_score(i, j)
@@ -225,8 +222,9 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         for t, target in enumerate(targets):
             scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
             for i, w in enumerate(words):
-                if w.lower() in self.typicalwords:
-                    scores[w.lower()] += get_score(target, i)
+                normalized_word = self.normalize_word(w)
+                if normalized_word in self.typicalwords:
+                    scores[normalized_word] += get_score(target, i)
             for i, w in enumerate(scores):
                 data[t, i] = scores[w]
 

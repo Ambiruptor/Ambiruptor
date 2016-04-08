@@ -4,6 +4,7 @@ import re
 import mwparserfromhell
 
 from ambiruptor.base.core import Miner
+from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 
 
 class Wikipedia:
@@ -43,8 +44,8 @@ class Wikipedia:
             for x in spliter.split(d):
                 link = matcher.match(x)
                 if link is None:
-                    tokens = tokenizer.split(Wikipedia.clean_wikitext(x))
-                    res.extend([t for t in tokens if t is not ""])
+                    tokens = word_tokenize(Wikipedia.clean_wikitext(x))
+                    res.extend(tokens)
                 else:
                     label = link.group(2)
                     sense = Wikipedia.normalize_title(link.group(1))
