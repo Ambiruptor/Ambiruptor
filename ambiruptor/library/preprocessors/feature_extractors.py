@@ -1,6 +1,7 @@
 import random
 import numpy as np
 import os.path
+import re
 from nltk import pos_tag
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -24,12 +25,12 @@ class AmbiguousExtraction(object):
             raise TypeError("An instance of FeatureExtractor was expected")
         self.features.append(f)
 
-    def extract_features(self, text, ambiguous_word):
+    def extract_features(self, words, ambiguous_word):
         """Extract a feature vector"""
 
-        # Tokenize the text
-        words = np.array(word_tokenize(text))
-
+        # words is an array of words...
+        assert isinstance(words, np.ndarray)
+        
         # Extract targets
         targets = []
         for i in range(0, len(words)):
@@ -169,12 +170,23 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         self.lang = "english"
         self.typicalwords = None
         self.stemmer = PorterStemmer()
+        self.set_language("english")
 
     def normalize_word(self, s):
         return self.stemmer.stem(s.lower())
 
     def set_language(self, lang):
         self.lang = lang
+        self.is_word = re.compile(r"\w+", re.UNICODE)
+        self.forbidden = set(stopwords.words(lang))
+        self.forbidden.add("")
+    
+    def is_forbidden(self, s):
+        if self.is_word.fullmatch(s) is None:
+            return True
+        if self.normalize_word(s) in self.forbidden:
+            return True
+        return False 
 
     def get_score_function(self):
         return lambda i,j: 1. if abs(i - j) < 10 else 0.
@@ -199,10 +211,8 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                                 typicalwords[x[1]][word] = 0
                             typicalwords[x[1]][word] += score
         self.typicalwords = set()
-        forbidden = set(stopwords.words(self.lang))
-        forbidden.add("")
         for sense in typicalwords:
-            words = [x for x in typicalwords[sense] if x not in forbidden]
+            words = [x for x in typicalwords[sense] if not self.is_forbidden(x)]
             scores = [ -typicalwords[sense][x] for x in words ]
             bestwords = [ x[1] for x in sorted(zip(scores, words))[:10]]
             self.typicalwords.update(bestwords)

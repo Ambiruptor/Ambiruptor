@@ -47,7 +47,6 @@ for n,w in enumerate(ambiguous_words):
     
     feature = fe.CloseWordsFeatureExtractor()
     feature.load(filename_features)
-    feature.print_typicalwords()
     
     with open(filename_corpus, 'rb') as f:
         corpus = pickle.load(f)
@@ -56,12 +55,13 @@ for n,w in enumerate(ambiguous_words):
     corpus_extractor.add_feature(feature)
     train_data = corpus_extractor.extract_features(corpus)
     
+    # Temporary : Sanitize the corpus (if less than 10 links, forget)
     senses = dict()
     for x in train_data.senses:
         if x not in senses:
             senses[x] = 0
         senses[x] = senses[x] + 1
-    print(senses)
+    #print(senses)
     
     import numpy as np
     X = []
@@ -72,11 +72,20 @@ for n,w in enumerate(ambiguous_words):
             Y.append(y)
     X = np.asarray(X)
     train_data = TrainData(X, Y)
-    print(X.shape)
+    #print(X.shape)
+    # End of sanitize
     
+    # Export model
+    model = LinearSVMClassifier()
+    model.fit(train_data)
+    with open(filename_models, 'wb') as f:
+        pickle.dump(model, f)
+    
+    """
     for name, model in models:
         m = model()
         m.fit(train_data)
         score_in = m.score(train_data)
         score_cv = np.average(m.cross_validation(train_data))
         print("%s, Score(in) = %f, Score(cv) = %f" % (name, score_in, score_cv))
+    """
