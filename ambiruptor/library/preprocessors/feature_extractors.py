@@ -10,7 +10,7 @@ from ambiruptor.base.core import FeatureExtractor
 from ambiruptor.library.preprocessors.tokenizers import word_tokenize
 from ambiruptor.library.preprocessors.data_structures \
     import AmbiguousData, TrainData
-
+from nltk.stem import WordNetLemmatizer
 
 
 class AmbiguousExtraction(object):
@@ -28,15 +28,16 @@ class AmbiguousExtraction(object):
     def extract_features(self, words, ambiguous_word):
         """Extract a feature vector"""
 
+        lemmatizer = WordNetLemmatizer()
+        words = np.array([lemmatizer.lemmatize(word) for word in words])
         # words is an array of words...
         assert isinstance(words, np.ndarray)
-        
+
         # Extract targets
         targets = []
         for i in range(0, len(words)):
             if words[i] == ambiguous_word:
                 targets.append(i)
-
         # Extract features
         tmp_data = []
         for f in self.features:
@@ -189,7 +190,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         return False 
 
     def get_score_function(self):
-        return lambda i,j: 1. if abs(i - j) < 10 else 0.
+        return lambda i, j: 1. if abs(i - j) < 10 else 0.
 
     def build_typicalwords(self, corpora):
         """
@@ -213,8 +214,8 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         self.typicalwords = set()
         for sense in typicalwords:
             words = [x for x in typicalwords[sense] if not self.is_forbidden(x)]
-            scores = [ -typicalwords[sense][x] for x in words ]
-            bestwords = [ x[1] for x in sorted(zip(scores, words))[:10]]
+            scores = [-typicalwords[sense][x] for x in words ]
+            bestwords = [x[1] for x in sorted(zip(scores, words))[:10]]
             self.typicalwords.update(bestwords)
 
     def print_typicalwords(self):
@@ -228,9 +229,8 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         get_score = self.get_score_function()
 
         data = np.zeros((len(targets), len(self.typicalwords)))
-
         for t, target in enumerate(targets):
-            scores = dict(zip(self.typicalwords, [0.]*len(self.typicalwords)))
+            scores = dict(zip(self.typicalwords, [0.] * len(self.typicalwords)))
             for i, w in enumerate(words):
                 normalized_word = self.normalize_word(w)
                 if normalized_word in self.typicalwords:
