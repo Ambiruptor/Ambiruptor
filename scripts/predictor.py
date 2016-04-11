@@ -25,7 +25,7 @@ def predictor(datadir, s):
         # Feature extraction
         filename_features = datadir + "/feature_extractors/" + w + ".dump"
         if not os.path.isfile(filename_features):
-            print("No features file for word '%s'." % w)
+            #print("No features file for word '%s'." % w)
             continue
         feature = fe.CloseWordsFeatureExtractor()
         feature.load(filename_features)
@@ -33,10 +33,13 @@ def predictor(datadir, s):
         ambiguous_extractor.add_feature(feature)
         ambiguous_data = ambiguous_extractor.extract_features(words, ambiguous_word)
         
+        if ambiguous_data.data.shape[0] == 0:
+            continue
+        
         # Model prediction
         filename_models = datadir + "/models/" + w + ".dump"
         if not os.path.isfile(filename_models):
-            print("No models file for word '%s'." % w)
+            #print("No models file for word '%s'." % w)
             continue
         with open(filename_models, "rb") as f:
             model = pickle.load(f)
