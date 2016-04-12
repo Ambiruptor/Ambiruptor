@@ -45,12 +45,12 @@ def predictor(datadir, text):
 
         with open(filename_models, "rb") as f:
             model = pickle.load(f)
-            predictions = model.predict_classes(ambiguous_data)
+            predictions = model.predict(ambiguous_data)
             for index, meaning in zip(ambiguous_data.targets, predictions):
                 result = dict()
                 result["begin"] = sum([len(words[i]) for i in range(index)])
                 result["end"] = result["begin"] + len(words[index])
-                result["all_senses"] = model.lb.classes_.tolist()
+                result["all_senses"] = model.model.classes_.tolist()
                 result["meaning"] = result["all_senses"].index(meaning)
                 result["url"] = "https://en.wikipedia.org/wiki/%s" % meaning
                 results.append(result)

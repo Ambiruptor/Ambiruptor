@@ -79,6 +79,7 @@ for n,w in enumerate(ambiguous_words):
     
     # Export model
     model = LinearSVMClassifier()
+    model.fit(train_data)
     
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
