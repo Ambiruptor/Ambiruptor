@@ -48,6 +48,14 @@ class Learner(object):
         simply calling the train method.
         """
         return self.train(train_data)
+    
+    def scoring(y_pred, y):
+        scores = dict()
+        scores["accuracy"] = metrics.accuracy_score(y_pred, y)
+        scores["f1"] = metrics.f1_score(y_pred, y, average="macro")
+        scores["precision"] = metrics.precision_score(y_pred, y, average="macro")
+        scores["recall"] = metrics.recall_score(y_pred, y, average="macro")
+        return scores
 
     def score(self, train_data):
         """Provide the scoring interface for scikit-learn utils."""
@@ -55,14 +63,9 @@ class Learner(object):
     
     def scores(self, train_data):
         """Provide the scoring interface for scikit-learn utils."""
-        guess = self.model.predict(train_data.data)
-        senses = self.lb.transform(train_data.senses)
-        scores = dict()
-        scores["accuracy"] = metrics.accuracy_score(guess, senses)
-        scores["f1"] = metrics.f1_score(guess, senses)
-        scores["precision"] = metrics.precision_score(guess, senses)
-        scores["recall"] = metrics.recall_score(guess, senses)
-        return scores
+        y_correct = train_data.senses
+        y_predict = self.model.predict(train_data.data)
+        return Learner.scoring(y_predict, y_correct)
 
     def get_params(self, deep=True):
         """Provide the get_params interface for scikit-learn utils."""
@@ -81,29 +84,27 @@ class Learner(object):
         with open(filename, 'wb') as f:
             pickle.dump(self.__dict__, f)
 
-    def cross_validation(self, train_data, cv=10):
+    def cross_validation_scores(self, train_data, cv=10):
         """Wrapper of the scikit-learn cross validation function."""
-        scores = cross_validation.cross_val_score(
+        
+        y_correct = train_data.senses
+        y_predict = cross_validation.cross_val_predict(
             self.model,
             train_data.data,
             train_data.senses,
             cv=cv)
-        return scores
+        """
+        result = dict()
+        for s in list(scores[0]):
+            result[s] = np.average([ score[s] for score in scores ])"""
+        return Learner.scoring(y_predict, y_correct)
         
     def train(self, train_data):
         """Train the model using the training set"""
-        if self.lb is None:
-            self.lb = preprocessing.LabelBinarizer()
-        y = self.lb.fit_transform(train_data.senses)
-        return self.model.fit(train_data.data, y)
+        return self.model.fit(train_data.data, train_data.senses)
 
     def predict(self, ambiguous_data):
         return self.model.predict(ambiguous_data.data)
-    
-    def predict_classes(self, ambiguous_data):
-        y = self.predict(ambiguous_data)
-        return self.lb.inverse_transform(y)
-
 
 
 class Miner(object):

@@ -66,21 +66,20 @@ for n,w in enumerate(ambiguous_words):
     Y = []
     for w in data:
         l = data[w]
-        if len(l) < 10:
+        if len(l) < 8:
             continue
         l.sort(key=lambda tup: tup[0])
-        for x in l[-10:]:
+        for x in l[-50:]:
             X.append(x[1])
             Y.append(w)
     X = np.asarray(X)
     train_data = TrainData(X, Y)
-    #print(X.shape)
+    print(X.shape)
     # End of sanitize
     
     # Export model
-    model = DecisionTreeClassifier()
+    model = LinearSVMClassifier()
     
-    print(model.fit(train_data).estimators_[0].tree_)
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
     
@@ -90,7 +89,7 @@ for n,w in enumerate(ambiguous_words):
         print("------------ %s -------------" % name)
         m = model()
         m.fit(train_data)
-        scores = m.scores(train_data)
-        print(scores)
+        print("In", m.scores(train_data))
+        print("Cv", m.cross_validation_scores(train_data, 4))
         print("ok (%f s)" % (time.time() - t2))
     """
