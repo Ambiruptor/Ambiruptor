@@ -82,6 +82,7 @@ for n,w in enumerate(ambiguous_words):
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
     
+    """
     for name, model in models:
         t2 = time.time()
         print("------------ %s -------------" % name)
@@ -90,3 +91,4 @@ for n,w in enumerate(ambiguous_words):
         scores = m.scores(train_data)
         print(scores)
         print("ok (%f s)" % (time.time() - t2))
+    """
