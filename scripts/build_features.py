@@ -14,7 +14,7 @@ print("Done,", time.time() - t, "s")
 
 t = time.time()
 print("======================== Build features ============================")
-for n,w in enumerate(ambiguous_words):
+for n, w in enumerate(ambiguous_words):
     t2 = time.time()
     print("%s (%d/%d)" % (w, n, nb_ambiguous_words))
     filename_corpus = "data/corpora/" + w + ".dump"
