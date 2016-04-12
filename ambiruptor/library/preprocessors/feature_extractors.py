@@ -139,25 +139,25 @@ class PartOfSpeechFeatureExtractor(FeatureExtractor):
     pos_list = ['CC', 'CD', 'DT', 'EX', 'FW', 'IN', 'JJ', 'JJR', 'JJS',
                 'LS', 'MD', 'NN', 'NNP', 'NNPS', 'PDT', 'POS', 'PRP', 'PRP$',
                 'RB', 'RBR', 'RBS', 'RP', 'SYM', 'TO', 'UH', 'VB', 'VBD',
-                'VBG',  'VBN', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
+                'VBG', 'VBN', 'VBZ', 'WDT', 'WP', 'WP$', 'WRB']
     pos_to_int = dict(zip(pos_list, range(0, len(pos_list))))
 
     def extract_features(self, words, targets):
-        data = np.zeros((len(targets), 2*self.window_size+1))
+        data = np.zeros((len(targets), 2 * self.window_size + 1))
         for t, target in enumerate(targets):
-            window_begin = max(0,target-self.window_size)
-            window_end = target+self.window_size+1
-            pos = np.array(pos_tag(words[window_begin:window_end]))
-            for i in range(0,2*self.window_size+1):
+            window_begin = max(0, target - self.window_size)
+            window_end = target + self.window_size + 1
+            pos = np.array(pos_tag([" " if len(w) == 0 else w for w in words[window_begin:window_end]]))
+            for i in range(0, 2 * self.window_size + 1):
                 j = i + target - self.window_size
-                if j < 0 or j >= len(words) :
-                    data[t,i] = -1
+                if j < 0 or j >= len(words):
+                    data[t, i] = -1
                 else:
                     k = i - max(0, self.window_size - target)
                     if pos[k][1] in self.pos_to_int:
-                        data[t,i] = self.pos_to_int[pos[k][1]]
+                        data[t, i] = self.pos_to_int[pos[k][1]]
                     else:
-                        data[t,i] = 0
+                        data[t, i] = 0
         return data
 
 class CloseWordsFeatureExtractor(FeatureExtractor):
