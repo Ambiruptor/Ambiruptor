@@ -1,4 +1,5 @@
 import time, os.path, pickle
+import numpy as np
 
 from ambiruptor.library.preprocessors.data_structures import TrainData
 import ambiruptor.library.preprocessors.feature_extractors as fe
@@ -56,29 +57,30 @@ for n,w in enumerate(ambiguous_words):
     train_data = corpus_extractor.extract_features(corpus)
     
     # Temporary : Sanitize the corpus (if less than 10 links, forget)
-    senses = dict()
-    for x in train_data.senses:
-        if x not in senses:
-            senses[x] = 0
-        senses[x] = senses[x] + 1
-    #print(senses)
-    
-    import numpy as np
+    data = dict()
+    for x,y in zip(train_data.data, train_data.senses):
+        if y not in data:
+            data[y] = []
+        data[y].append((sum(x), x))
     X = []
     Y = []
-    for x,y in zip(train_data.data, train_data.senses):
-        if senses[y] >= 10:
-            X.append(x)
-            Y.append(y)
+    for w in data:
+        l = data[w]
+        if len(l) < 10:
+            continue
+        l.sort(key=lambda tup: tup[0])
+        for x in l[-10:]:
+            X.append(x[1])
+            Y.append(w)
     X = np.asarray(X)
     train_data = TrainData(X, Y)
     #print(X.shape)
     # End of sanitize
     
-    
     # Export model
     model = DecisionTreeClassifier()
-    model.fit(train_data)
+    
+    print(model.fit(train_data).estimators_[0].tree_)
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
     

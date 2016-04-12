@@ -95,7 +95,7 @@ class Learner(object):
         if self.lb is None:
             self.lb = preprocessing.LabelBinarizer()
         y = self.lb.fit_transform(train_data.senses)
-        self.model.fit(train_data.data, y)
+        return self.model.fit(train_data.data, y)
 
     def predict(self, ambiguous_data):
         return self.model.predict(ambiguous_data.data)
