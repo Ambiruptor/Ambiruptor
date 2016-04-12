@@ -35,7 +35,7 @@ for n,w in enumerate(ambiguous_words):
     print("%s (%d/%d)" % (w, n, nb_ambiguous_words))
     
     filename_corpus = "data/corpora/" + w + ".dump"
-    filename_features = "data/feature_extractors/" + w + ".dump"
+    filename_features = "data/feature_extractors/" + w + ".corpus.dump"
     filename_models = "data/models/" + w + ".dump"
     if not os.path.isfile(filename_corpus):
         print("No corpus file.")
@@ -47,14 +47,12 @@ for n,w in enumerate(ambiguous_words):
         print("Already done.")
         #continue
     
-    feature = fe.CloseWordsFeatureExtractor()
-    feature.load(filename_features)
+    with open(filename_features, 'rb') as f:
+        corpus_extractor = pickle.load(f)
     
     with open(filename_corpus, 'rb') as f:
         corpus = pickle.load(f)
     
-    corpus_extractor = fe.CorpusExtraction()
-    corpus_extractor.add_feature(feature)
     train_data = corpus_extractor.extract_features(corpus)
     
     # Temporary : Sanitize the corpus (if less than 10 links, forget)
@@ -77,16 +75,18 @@ for n,w in enumerate(ambiguous_words):
     #print(X.shape)
     # End of sanitize
     
-    """
+    
     # Export model
-    model = LinearSVMClassifier()
+    model = DecisionTreeClassifier()
     model.fit(train_data)
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
-    """
+    
     for name, model in models:
+        t2 = time.time()
+        print("------------ %s -------------" % name)
         m = model()
         m.fit(train_data)
         scores = m.scores(train_data)
-        print("--------------------------")
-        print(name, scores)
+        print(scores)
+        print("ok (%f s)" % (time.time() - t2))
