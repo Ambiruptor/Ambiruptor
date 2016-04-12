@@ -3,6 +3,8 @@ import os.path
 import re
 import time
 
+from ambiruptor.library.preprocessors.tokenizers import word_tokenize
+
 from ambiruptor.library.preprocessors.data_structures import TrainData
 import ambiruptor.library.preprocessors.feature_extractors as fe
 
@@ -29,36 +31,43 @@ if __name__ == '__main__':
     print("Done,", time.time() - t, "s")
 
     # Building features
-    print("********************** Building features *************************")
+    print("********************** Building/Loading features *************************")
     t = time.time()
-    feature1 = fe.PartOfSpeechFeatureExtractor()
-    feature2 = fe.CloseWordsFeatureExtractor()
+    feature_extractor = fe.AmbiguousExtraction()
     if os.path.isfile("data/feature_extractors/test.dump"):
         print("Loading feature extractor...")
-        feature2.load("data/feature_extractors/test.dump")
+        feature_extractor.load("data/feature_extractors/test.dump")
+        corpus_extractor = fe.CorpusExtraction()
+        for f in feature_extractor.features:
+            corpus_extractor.add_feature(f)
     else:
         print("Building feature extractor...")
+        feature1 = fe.PartOfSpeechFeatureExtractor()
+        feature2 = fe.CloseWordsFeatureExtractor()
+
         feature2.build_typicalwords(corpus)
-        feature2.export("data/feature_extractors/test.dump")
-    feature2.print_typicalwords()
-    print("Done,", time.time() - t, "s")
+        feature2.print_typicalwords()
 
-    # Feature extraction (corpus)
-    print("******************* Feature extraction (corpus) ******************")
-    t = time.time()
-    corpus_extractor = fe.CorpusExtraction()
-    #corpus_extractor.add_feature(feature1)
-    corpus_extractor.add_feature(feature2)
-    train_data = corpus_extractor.extract_features(corpus)
-    print("Shape of the matrix of features:", train_data.data.shape)
-    print("Done,", time.time() - t, "s")
+        feature_extractor.add_feature(feature1)
+        feature_extractor.add_feature(feature2)
+        # feature_extractor.export("data/feature_extractors/test.dump")
+        print("Done,", time.time() - t, "s")
 
-    # Feature extraction (ambiguous text)
-    print("************** Feature extraction (ambiguous text) ***************")
-    t = time.time()
-    ambiguous_extractor = fe.AmbiguousExtraction()
-    #ambiguous_extractor.add_feature(feature1)
-    ambiguous_extractor.add_feature(feature2)
+        # Feature extraction (corpus)
+        print("******************* Feature extraction (corpus) ******************")
+        t = time.time()
+        corpus_extractor = fe.CorpusExtraction()
+        corpus_extractor.add_feature(feature1)
+        corpus_extractor.add_feature(feature2)
+
+        train_data = corpus_extractor.extract_features(corpus)
+        print("Shape of the matrix of features:", train_data.data.shape)
+        print(train_data.data)
+        print("Done,", time.time() - t, "s")
+
+        # Feature extraction (ambiguous text)
+        print("************** Feature extraction (ambiguous text) ***************")
+        t = time.time()
 
     text = """The bar of a mature tropical cyclone is a very dark gray-black
               layer of cloud appearing near the horizon as seen from an observer
@@ -69,8 +78,8 @@ if __name__ == '__main__':
               usually visible in ascending order above the top of the bar, while
               the wind direction for an observer facing toward the bar is
               typically from the left and slightly behind the observer."""
-
-    ambiguous_data = ambiguous_extractor.extract_features(text, "bar")
+    words = np.array(word_tokenize(text))
+    ambiguous_data = feature_extractor.extract_features(np.array(words), "bar")
     print("Shape of the matrix of features:", ambiguous_data.data.shape)
     print("Done,", time.time() - t, "s")
 
