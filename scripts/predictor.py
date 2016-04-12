@@ -44,7 +44,7 @@ def predictor(datadir, text):
             continue
         with open(filename_models, "rb") as f:
             model = pickle.load(f)
-            predictions = model.predict(ambiguous_data)
+            predictions = model.predict_classes(ambiguous_data)
             #print(predictions)
             for index, meaning in zip(ambiguous_data.targets, predictions):
                 result = dict()

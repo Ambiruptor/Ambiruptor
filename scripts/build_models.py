@@ -8,6 +8,7 @@ from ambiruptor.library.learners.models import RbfSVMClassifier
 from ambiruptor.library.learners.models import NaiveBayesClassifier
 from ambiruptor.library.learners.models import DecisionTreeClassifier
 from ambiruptor.library.learners.models import RandomForestClassifier
+from ambiruptor.library.learners.models import KNeighborsClassifier
 
 t = time.time()
 print("============== Building list of ambiguous words ===================")
@@ -23,10 +24,11 @@ print("Done,", time.time() - t, "s")
 
 print("======================== Build models =============================")
 
-models = [ ("Linear SVM", LinearSVMClassifier),
-           ("Rdf SVM", RbfSVMClassifier),
+models = [ ("KNeighbors", KNeighborsClassifier),
            ("Naive Bayes", NaiveBayesClassifier),
-           ("Decision Tree", DecisionTreeClassifier) ]
+           ("Decision Tree", DecisionTreeClassifier),
+           ("Linear SVM", LinearSVMClassifier),
+           ("Rdf SVM", RbfSVMClassifier), ]
 
 for n,w in enumerate(ambiguous_words):
     t2 = time.time()
@@ -43,7 +45,7 @@ for n,w in enumerate(ambiguous_words):
         continue
     if os.path.isfile(filename_models):
         print("Already done.")
-        continue
+        #continue
     
     feature = fe.CloseWordsFeatureExtractor()
     feature.load(filename_features)
@@ -75,17 +77,16 @@ for n,w in enumerate(ambiguous_words):
     #print(X.shape)
     # End of sanitize
     
+    """
     # Export model
     model = LinearSVMClassifier()
     model.fit(train_data)
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
-    
     """
     for name, model in models:
         m = model()
         m.fit(train_data)
-        score_in = m.score(train_data)
-        score_cv = np.average(m.cross_validation(train_data))
-        print("%s, Score(in) = %f, Score(cv) = %f" % (name, score_in, score_cv))
-    """
+        scores = m.scores(train_data)
+        print("--------------------------")
+        print(name, scores)

@@ -1,7 +1,7 @@
 """Core base classes"""
 
 from abc import ABCMeta, abstractmethod
-from sklearn import cross_validation
+from sklearn import cross_validation, metrics, preprocessing
 
 import pickle
 
@@ -36,17 +36,13 @@ class Learner(object):
     """Abstract class for learning."""
 
     __metaclass__ = DocStringInheritor
+    lb = None
+    model = None
 
     def __init__(self):
         """Init the learning model."""
-        model = None
-
-    @abstractmethod
-    def train(self, train_data):
-        """Train the model using the training set train_data -- instance of TrainData.
-        """
         pass
-
+    
     def fit(self, train_data):
         """Provide the interface for scikit-learn utils
         simply calling the train method.
@@ -56,17 +52,22 @@ class Learner(object):
     def score(self, train_data):
         """Provide the scoring interface for scikit-learn utils."""
         return self.model.score(train_data.data, train_data.senses)
+    
+    def scores(self, train_data):
+        """Provide the scoring interface for scikit-learn utils."""
+        guess = self.model.predict(train_data.data)
+        senses = self.lb.transform(train_data.senses)
+        scores = dict()
+        scores["accuracy"] = metrics.accuracy_score(guess, senses)
+        scores["f1"] = metrics.f1_score(guess, senses)
+        scores["precision"] = metrics.precision_score(guess, senses)
+        scores["recall"] = metrics.recall_score(guess, senses)
+        return scores
 
     def get_params(self, deep=True):
         """Provide the get_params interface for scikit-learn utils."""
         return self.model.get_params(deep)
 
-    @abstractmethod
-    def predict(self, data):
-        """Guess the best sense for a features vector data -- instance of
-        AmbiguousData.
-        """
-        pass
 
     def load(self, filename):
         """Load a model from a binary file."""
@@ -88,6 +89,20 @@ class Learner(object):
             train_data.senses,
             cv=cv)
         return scores
+        
+    def train(self, train_data):
+        """Train the model using the training set"""
+        if self.lb is None:
+            self.lb = preprocessing.LabelBinarizer()
+        y = self.lb.fit_transform(train_data.senses)
+        self.model.fit(train_data.data, y)
+
+    def predict(self, ambiguous_data):
+        return self.model.predict(ambiguous_data.data)
+    
+    def predict_classes(self, ambiguous_data):
+        y = self.predict(ambiguous_data)
+        return self.lb.inverse_transform(y)
 
 
 

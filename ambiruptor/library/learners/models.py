@@ -17,25 +17,17 @@ import pickle
 from sklearn.svm import LinearSVC, SVC
 from sklearn.multiclass import OneVsRestClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn import tree
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier as DecisionTree
+from sklearn.ensemble import RandomForestClassifier as RanomForest
+from sklearn.neighbors import KNeighborsClassifier as KNeighbors
 
 from ambiruptor.base.core import Learner
-
 
 # Parametrized by 'C' - Penalty parameter of the error term.
 class LinearSVMClassifier(Learner):
     def __init__(self, C=1.0):
         """Init the learning model"""
         self.model = OneVsRestClassifier(LinearSVC(C=C))
-
-    def train(self, train_data):
-        """Train the model using the training set"""
-        self.model.fit(train_data.data, train_data.senses)
-
-    def predict(self, ambiguous_data):
-        return self.model.predict(ambiguous_data.data)
-
 
 # Parametrized by
 # 'C' that trades off misclassification of training examples against simplicity of the decision surface
@@ -46,52 +38,26 @@ class RbfSVMClassifier(Learner):
         """Init the learning model"""
         self.model = OneVsRestClassifier(SVC(C=C, gamma=gamma, kernel='rbf'))
 
-    def train(self, train_data):
-        """Train the model using the training set"""
-        self.model.fit(train_data.data, train_data.senses)
-
-    def predict(self, ambiguous_data):
-        return self.model.predict(ambiguous_data.data)
-
-
 class NaiveBayesClassifier(Learner):
     def __init__(self):
         """Init the learning model"""
         self.model = OneVsRestClassifier(GaussianNB())
 
-    def train(self, train_data):
-        """Train the model using the training set"""
-        self.model.fit(train_data.data, train_data.senses)
-
-    def predict(self, ambiguous_data):
-        return self.model.predict(ambiguous_data.data)
-
-
 class DecisionTreeClassifier(Learner):
     def __init__(self):
         """Init the learning model"""
-        self.model = OneVsRestClassifier(tree.DecisionTreeClassifier())
-
-    def train(self, train_data):
-        """Train the model using the training set"""
-        self.model.fit(train_data.data, train_data.senses)
-
-    def predict(self, ambiguous_data):
-        return self.model.predict(ambiguous_data.data)
-
+        self.model = OneVsRestClassifier(DecisionTree())
 
 # Parametrized with number of estimators
 # default 5 - ?
 class RandomForestClassifier(Learner):
     def __init__(self, n_estimators=None):
         """Init the learning model"""
-        self.model = RandomForestClassifier(n_estimators)
+        self.model = OneVsRestClassifier(RandomForest(n_estimators))
 
-    def train(self, train_data):
-        """Train the model using the training set"""
-        self.model.fit(train_data.data, train_data.senses)
-
-    def predict(self, ambiguous_data):
-        return self.model.predict(ambiguous_data.data)
+class KNeighborsClassifier(Learner):
+    def __init__(self, n_neighbors=1):
+        """Init the learning model"""
+        self.model = OneVsRestClassifier(KNeighbors(n_neighbors))
 
 

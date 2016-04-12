@@ -8,6 +8,7 @@ from ambiruptor.library.learners.models import LinearSVMClassifier
 from ambiruptor.library.learners.models import RbfSVMClassifier
 from ambiruptor.library.learners.models import NaiveBayesClassifier
 from ambiruptor.library.learners.models import DecisionTreeClassifier
+from ambiruptor.library.learners.models import KNeighborsClassifier
 # from ambiruptor.library.learners.models import RandomForestClassifier
 
 from sklearn.cross_validation import train_test_split
@@ -155,6 +156,8 @@ if __name__ == '__main__':
                NaiveBayesClassifier()),
               ("Decision Tree",
                DecisionTreeClassifier()),
+              ("KNeighbors",
+               KNeighborsClassifier()),
               # ("Random Forests with %d estimators" % best_n_estimators,
               #  RandomForestClassifier())
               ]
