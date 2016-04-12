@@ -28,15 +28,15 @@ class AmbiguousExtraction(object):
     def extract_features(self, words, ambiguous_word):
         """Extract a feature vector"""
 
-        lemmatizer = WordNetLemmatizer()
-        words = np.array([lemmatizer.lemmatize(word) for word in words])
         # words is an array of words...
         assert isinstance(words, np.ndarray)
+        lemmatizer = WordNetLemmatizer()
+        ambiguous_word = lemmatizer.lemmatize(ambiguous_word)
 
         # Extract targets
         targets = []
         for i in range(0, len(words)):
-            if words[i] == ambiguous_word:
+            if lemmatizer.lemmatize(words[i]) == ambiguous_word:
                 targets.append(i)
         # Extract features
         tmp_data = []
