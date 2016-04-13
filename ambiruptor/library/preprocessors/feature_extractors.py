@@ -190,7 +190,7 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         return False 
 
     def get_score_function(self):
-        return lambda i, j: 1. if abs(i - j) < 10 else 0.
+        return lambda i, j: 1. if abs(i - j) < 50 else 0.
 
     def build_typicalwords(self, corpora):
         """
@@ -198,25 +198,26 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
         @param(word) : string
         """
         get_score = self.get_score_function()
-        typicalwords = dict()
+        dictwords = dict()
         for corpus in corpora:
             for i, x in enumerate(corpus):
                 if type(x) is tuple:
-                    if x[1] not in typicalwords:
-                        typicalwords[x[1]] = dict()
+                    if x[1] not in dictwords:
+                        dictwords[x[1]] = dict()
                     for j, y in enumerate(corpus):
                         if type(y) is not tuple:
                             word = self.normalize_word(y)
                             score = get_score(i, j)
-                            if word not in typicalwords[x[1]]:
-                                typicalwords[x[1]][word] = 0
-                            typicalwords[x[1]][word] += score
-        self.typicalwords = set()
-        for sense in typicalwords:
-            words = [x for x in typicalwords[sense] if not self.is_forbidden(x)]
-            scores = [-typicalwords[sense][x] for x in words ]
-            bestwords = [x[1] for x in sorted(zip(scores, words))[:10]]
-            self.typicalwords.update(bestwords)
+                            if word not in dictwords[x[1]]:
+                                dictwords[x[1]][word] = 0
+                            dictwords[x[1]][word] += score
+        typicalwords = set()
+        for sense in dictwords:
+            words = [x for x in dictwords[sense] if not self.is_forbidden(x)]
+            scores = [dictwords[sense][x] for x in words ]
+            bestwords = [x[1] for x in sorted(zip(scores, words))[-20:]]
+            typicalwords.update(bestwords)
+        self.typicalwords = dict(zip(typicalwords, range(len(typicalwords))))
 
     def print_typicalwords(self):
         print(self.typicalwords)
@@ -235,8 +236,8 @@ class CloseWordsFeatureExtractor(FeatureExtractor):
                 normalized_word = self.normalize_word(w)
                 if normalized_word in self.typicalwords:
                     scores[normalized_word] += get_score(target, i)
-            for i, w in enumerate(scores):
-                data[t, i] = scores[w]
+            for w in self.typicalwords:
+                data[t, self.typicalwords[w]] = scores[w]
 
         return data
 

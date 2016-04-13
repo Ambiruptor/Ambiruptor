@@ -84,7 +84,6 @@ for n,w in enumerate(ambiguous_words):
     with open(filename_models, 'wb') as f:
         pickle.dump(model, f)
     
-    """
     for name, model in models:
         t2 = time.time()
         print("------------ %s -------------" % name)
@@ -93,4 +92,3 @@ for n,w in enumerate(ambiguous_words):
         print("In", m.scores(train_data))
         print("Cv", m.cross_validation_scores(train_data, 4))
         print("ok (%f s)" % (time.time() - t2))
-    """
